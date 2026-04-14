@@ -34,6 +34,7 @@
     activeTab: 'map',
     neuroFrom: 'map',
     neuroIndex: 0,
+    neuroCompareMode: false,
     wikiFrom: 'map',
     legendVisible: false,
     activeBottomSheet: null,
@@ -546,7 +547,7 @@
   }
 
   // ── NEURO ───────────────────────────────────
-  function openNeuro(obj, from) {
+  function openNeuro(obj, from, preserveEyeMode = false, preserveCompare = false) {
     STATE.neuroFrom = from || 'map';
     STATE.currentObject = obj;
 
@@ -561,19 +562,33 @@
     $('neuro-info-source').textContent = obj.source_label ? `Источник: ${obj.source_label}` : '';
     $('neuro-info-source').href = obj.source_url || '#';
 
-    document.querySelectorAll('.nc-btn').forEach(b => b.classList.remove('active'));
-    hideBottomSheet();
-    show($('neuro-img-restored'));
-    hide($('neuro-compare'));
+    const keepCompare = preserveCompare && STATE.neuroCompareMode;
+    if (keepCompare) {
+      $('neuro-btn-info').classList.remove('active');
+      $('neuro-btn-compare').classList.add('active');
+      hideBottomSheet();
+    } else {
+      document.querySelectorAll('.nc-btn').forEach(b => b.classList.remove('active'));
+      STATE.neuroCompareMode = false;
+      hideBottomSheet();
+      show($('neuro-img-restored'));
+      hide($('neuro-compare'));
+    }
 
-    // Reset eye mode
-    $('neuro-controls').classList.remove('eye-mode');
-    show($('neuro-topbar'));
-    hide($('neuro-eye-close'));
+    if (!preserveEyeMode) {
+      $('neuro-controls').classList.remove('eye-mode');
+      const screen = $('screen-neuro');
+      if (screen) screen.classList.remove('eye-mode');
+      show($('neuro-topbar'));
+      hide($('neuro-eye-close'));
+    }
 
     const idx = STATE.neurochronicles.indexOf(obj);
     if (idx !== -1) STATE.neuroIndex = idx;
     updateNeuroCounter();
+
+    // Обновить боковую панель
+    updateNeuroSidebar();
 
     switchScreen('neuro');
   }
@@ -588,20 +603,76 @@
     const items = STATE.neurochronicles;
     if (!items.length) return;
     STATE.neuroIndex = (STATE.neuroIndex + dir + items.length) % items.length;
-    openNeuro(items[STATE.neuroIndex], STATE.neuroFrom);
+    const isEyeMode = $('neuro-controls').classList.contains('eye-mode');
+    openNeuro(items[STATE.neuroIndex], STATE.neuroFrom, isEyeMode, STATE.neuroCompareMode);
   }
 
   function toggleNeuroEyeMode() {
     const controls = $('neuro-controls');
+    const screen = $('screen-neuro');
     const isEye = controls.classList.contains('eye-mode');
     if (isEye) {
       controls.classList.remove('eye-mode');
+      if (screen) screen.classList.remove('eye-mode');
       show($('neuro-topbar'));
       hide($('neuro-eye-close'));
     } else {
       controls.classList.add('eye-mode');
+      if (screen) screen.classList.add('eye-mode');
       hide($('neuro-topbar'));
       show($('neuro-eye-close'));
+    }
+  }
+
+  function openNeuroSidebar() {
+    $('neuro-sidebar').classList.add('open');
+    $('neuro-overlay').classList.remove('hidden');
+    $('screen-neuro')?.classList.add('neuro-sidebar-visible');
+  }
+
+  function closeNeuroSidebar() {
+    $('neuro-sidebar').classList.remove('open');
+    $('neuro-overlay').classList.add('hidden');
+    $('screen-neuro')?.classList.remove('neuro-sidebar-visible');
+  }
+
+  function toggleNeuroSidebar() {
+    const sidebar = $('neuro-sidebar');
+    if (!sidebar) return;
+
+    if (sidebar.classList.contains('open')) {
+      closeNeuroSidebar();
+    } else {
+      openNeuroSidebar();
+    }
+  }
+
+  function updateNeuroSidebar() {
+    const current = STATE.currentObject;
+    if (!current) return;
+
+    // === Обновить информационный блок (верхний) ===
+    const infoHtml = `
+      <h3>${current.title || ''}</h3>
+      <p><strong>Год:</strong> ${current.year || 'нет данных'}</p>
+      <p>${current.short_desc || ''}</p>
+      ${current.source_url ? `<a href="${current.source_url}" target="_blank">${current.source_label || 'Источник'}</a>` : ''}
+    `;
+
+    const sidebarInfo = $('neuro-sidebar-info');
+    if (sidebarInfo) {
+      sidebarInfo.innerHTML = infoHtml;
+    }
+
+    // === Обновить список нейрохроник (нижний) ===
+    const listHtml = STATE.neurochronicles.map((nc, idx) => {
+      const isActive = nc === current ? ' active' : '';
+      return `<li><button class="ns-list-item${isActive}" data-neuro-idx="${idx}">${nc.title || `Нейрохроника ${idx + 1}`}</button></li>`;
+    }).join('');
+
+    const sidebarList = $('neuro-sidebar-list');
+    if (sidebarList) {
+      sidebarList.innerHTML = listHtml;
     }
   }
 
@@ -616,6 +687,7 @@
         compareBtn.classList.remove('active');
         show(restored);
         hide(compare);
+        STATE.neuroCompareMode = false;
         return;
       }
 
@@ -624,6 +696,7 @@
       show(compare);
       hideBottomSheet();
       compareBtn.classList.add('active');
+      STATE.neuroCompareMode = true;
       initNeuroSlider();
 
     } else if (mode === 'info') {
@@ -635,6 +708,7 @@
 
       infoBtn.classList.add('active');
       compareBtn.classList.remove('active');
+      STATE.neuroCompareMode = false;
       show(restored);
       hide(compare);
       openBottomSheet($('neuro-info-sheet'));
@@ -1484,6 +1558,41 @@ if (wikiThemeBtn) {
     $('neuro-next').addEventListener('click', () => navigateNeuro(+1));
     $('neuro-btn-eye').addEventListener('click', toggleNeuroEyeMode);
     $('neuro-eye-close').addEventListener('click', toggleNeuroEyeMode);
+
+    // ── NEURO SIDEBAR EVENT HANDLERS ──
+    const neuroToggle = $('neuro-sidebar-toggle');
+    if (neuroToggle) {
+      neuroToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleNeuroSidebar();
+      });
+    }
+
+    const neuroSidebarClose = $('neuro-sidebar-close');
+    if (neuroSidebarClose) {
+      neuroSidebarClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeNeuroSidebar();
+      });
+    }
+
+    const neuroOverlay = $('neuro-overlay');
+    if (neuroOverlay) {
+      neuroOverlay.addEventListener('click', closeNeuroSidebar);
+    }
+
+    // Клики на элементы списка нейрохроник в боковой панели
+    document.addEventListener('click', (e) => {
+      const item = e.target.closest('.ns-list-item');
+      if (!item) return;
+
+      const idx = parseInt(item.getAttribute('data-neuro-idx'), 10);
+      if (isNaN(idx)) return;
+
+      STATE.neuroIndex = idx;
+      openNeuro(STATE.neurochronicles[idx], STATE.neuroFrom);
+      closeNeuroSidebar();
+    });
 
     $('viewer-back').addEventListener('click', () => {
       hideBottomSheet();

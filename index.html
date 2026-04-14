@@ -223,18 +223,14 @@
       </div>
 
       <div class="neuro-controls glass" id="neuro-controls">
-        <button class="nc-btn" id="neuro-btn-info" data-mode="info">
-          <span class="material-symbols-outlined">info</span>
-          <span class="nc-label">Инфо</span>
-        </button>
-        <button class="nc-btn" id="neuro-btn-compare" data-mode="compare">
+        <button class="nc-btn" id="neuro-btn-compare" data-mode="compare" aria-label="Сравнить до и после">
           <span class="material-symbols-outlined">compare</span>
-          <span class="nc-label">До / После</span>
+        </button>
+        <div class="nc-sep"></div>
+        <button class="nc-nav-btn" id="neuro-btn-eye" aria-label="Режим просмотра">
+          <span class="material-symbols-outlined">visibility</span>
         </button>
         <div class="neuro-nav-group" id="neuro-nav-group">
-          <button class="nc-nav-btn" id="neuro-btn-eye" aria-label="Режим просмотра">
-            <span class="material-symbols-outlined">visibility</span>
-          </button>
           <button class="nc-nav-btn" id="neuro-prev" aria-label="Предыдущая">
             <span class="material-symbols-outlined">chevron_left</span>
           </button>
@@ -243,11 +239,49 @@
             <span class="material-symbols-outlined">chevron_right</span>
           </button>
         </div>
+        <div class="nc-sep"></div>
+        <button class="nc-btn" id="neuro-btn-info" data-mode="info" aria-label="Информация">
+          <span class="material-symbols-outlined">info</span>
+        </button>
       </div>
 
       <button class="neuro-eye-close hidden" id="neuro-eye-close" aria-label="Выйти из режима просмотра">
         <span class="material-symbols-outlined">close</span>
       </button>
+
+      <!-- Кнопка открытия боковой панели нейрохроник -->
+      <button id="neuro-sidebar-toggle" class="neuro-sidebar-toggle glass" aria-label="Открыть меню">
+        <span class="material-symbols-outlined neuro-toggle-icon">chevron_right</span>
+      </button>
+
+      <!-- Боковая панель нейрохроник -->
+      <nav id="neuro-sidebar" class="neuro-sidebar glass">
+        <!-- Заголовок панели с кнопкой закрытия -->
+        <div class="ns-header glass">
+          <button id="neuro-sidebar-close" class="tb-btn ns-close-btn" aria-label="Закрыть меню">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          <span class="ns-logo">ВМАС</span>
+          <div style="width: 40px;"></div>
+        </div>
+
+        <!-- Верхний блок: краткая информация -->
+        <div class="ns-info-section">
+          <div id="neuro-sidebar-info" class="neuro-info-card">
+            <!-- Заполняется JS -->
+          </div>
+        </div>
+
+        <!-- Нижний блок: список нейрохроник (прокручиваемый) -->
+        <div class="ns-list-section">
+          <ul id="neuro-sidebar-list" class="ns-list">
+            <!-- Заполняется JS -->
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Оверлей для закрытия панели -->
+      <div id="neuro-overlay" class="neuro-overlay hidden"></div>
     </section>
 
     <section id="screen-3d-gallery" class="screen">

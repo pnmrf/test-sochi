@@ -1034,12 +1034,14 @@ body.dark .tab-indicator {
 
 .neuro-controls {
   position: absolute;
-  bottom: calc(var(--tab-h) + 12px);
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
+  align-items: center;
   gap: 4px;
   padding: 5px;
+  min-height: 54px;
   border-radius: var(--radius-pill);
   z-index: 200;
 }
@@ -1072,10 +1074,16 @@ body.dark .tab-indicator {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding-left: 10px;
-  margin-left: 2px;
-  border-left: 1px solid var(--glass-border);
   flex-shrink: 0;
+}
+
+.nc-sep {
+  width: 1px;
+  height: 22px;
+  background: var(--glass-border);
+  flex-shrink: 0;
+  align-self: center;
+  margin: 0 2px;
 }
 
 .nc-nav-btn {
@@ -1105,36 +1113,21 @@ body.dark .nc-nav-btn:hover { background: rgba(255,255,255,0.08); }
 
 /* Eye mode */
 .neuro-controls.eye-mode {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: none;
-  border: 1px solid rgba(255,255,255,0.22);
-  gap: 2px;
-  padding: 4px;
+  opacity: 0.65;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
-body.dark .neuro-controls.eye-mode {
-  border-color: rgba(255,255,255,0.18);
-}
-
-.neuro-controls.eye-mode .nc-label {
+.neuro-controls.eye-mode #neuro-btn-compare,
+.neuro-controls.eye-mode #neuro-btn-info,
+.neuro-controls.eye-mode .nc-sep {
   display: none;
 }
 
 .neuro-controls.eye-mode .neuro-nav-counter {
-  display: none;
+  color: var(--text);
 }
 
-.neuro-controls.eye-mode #neuro-nav-group {
-  border-left: none;
-  padding-left: 4px;
-  margin-left: 0;
-}
-
-.neuro-controls.eye-mode .nc-btn {
-  padding: 10px 12px;
-}
 
 .neuro-eye-close {
   position: absolute;
@@ -1157,6 +1150,190 @@ body.dark .neuro-controls.eye-mode {
 
 .neuro-eye-close:hover {
   background: rgba(0,0,0,0.35);
+}
+
+/* ── 10.1 NEURO SIDEBAR TOGGLE ── */
+.neuro-sidebar-toggle {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 1040;
+  display: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--radius-pill);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.neuro-sidebar-toggle:active {
+  transform: scale(0.92);
+}
+
+@media (max-width: 767px) {
+  .neuro-sidebar-toggle {
+    display: flex;
+  }
+}
+
+#screen-neuro.eye-mode .neuro-sidebar-toggle {
+  opacity: 0.65;
+}
+
+/* ── 10.2 NEURO SIDEBAR ── */
+.neuro-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  max-width: 340px;
+  height: 100dvh;
+  z-index: 1050;
+  background: var(--glass-bg);
+  border-right: 1px solid var(--glass-border);
+  transform: translateX(-100%);
+  transition: transform var(--transition);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.neuro-sidebar.open {
+  transform: translateX(0);
+}
+
+@media (max-width: 767px) {
+  .neuro-sidebar {
+    max-width: 100%;
+  }
+}
+
+/* ── 10.3 SIDEBAR HEADER ── */
+.ns-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--glass-border);
+  height: 56px;
+}
+
+.ns-logo {
+  font-weight: 600;
+  font-size: 14px;
+  flex: 1;
+  text-align: center;
+  color: var(--text);
+}
+
+.ns-close-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+/* ── 10.4 SIDEBAR SECTIONS ── */
+.ns-info-section,
+.ns-list-section {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.ns-info-section {
+  flex: 0 0 45%;
+  padding: 16px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.ns-list-section {
+  flex: 1;
+  padding: 12px 8px;
+}
+
+/* ── 10.5 INFO CARD (в боковой панели) ── */
+.neuro-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.neuro-info-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+.neuro-info-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.neuro-info-card a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 12px;
+}
+
+/* ── 10.6 NEURO LIST (в боковой панели) ── */
+.ns-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ns-list li {
+  padding: 0;
+}
+
+.ns-list-item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background var(--transition), color var(--transition);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.ns-list-item:active {
+  background: var(--accent);
+  color: white;
+}
+
+/* ── 10.7 NEURO OVERLAY ── */
+.neuro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1045;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.neuro-overlay.hidden {
+  display: none;
 }
 
 /* ── 11. BOTTOM SHEET ── */
