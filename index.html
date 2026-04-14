@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ВМАС — Виртуальный музей архитектуры Сочи</title>
+  <meta name="description" content="Интерактивная платформа архитектурного наследия Сочи" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#F7F5F2" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tenor+Sans&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+
+  <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="splash">
+    <div class="splash-inner">
+      <img src="assets/logo.png" alt="ВМАС" class="splash-logo" onerror="this.style.display='none'" />
+      <div class="splash-title">Виртуальный музей<br>архитектуры Сочи</div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+
+    <header class="top-bar glass" id="top-bar">
+      <button class="tb-btn" id="btn-home" aria-label="На главную">
+        <span class="material-symbols-outlined">museum</span>
+      </button>
+      <span class="tb-title" id="top-bar-title">ВМАС</span>
+      <button class="tb-btn" id="btn-theme" aria-label="Сменить тему">
+        <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+      </button>
+    </header>
+
+    <section id="screen-map" class="screen active">
+      <div id="map-container"></div>
+
+      <aside id="sidebar-card" class="sidebar-card hidden">
+        <div class="sc-image-wrap">
+          <img id="sc-img" src="" alt="" />
+          <span id="sc-badge" class="badge"></span>
+        </div>
+        <div class="sc-body">
+          <h2 id="sc-title" class="sc-title"></h2>
+          <p id="sc-meta" class="sc-meta"></p>
+          <p id="sc-desc" class="sc-desc"></p>
+
+          <div id="sc-architect-list" class="sc-architect-list"></div>
+
+          <div class="sc-actions">
+            <button id="sc-btn-open" class="btn-primary">Открыть</button>
+            <button id="sc-btn-wiki" class="btn-glass">
+              <span class="material-symbols-outlined">menu_book</span>
+              Вики
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="map-controls">
+        <button class="mc-btn" id="btn-compass" aria-label="Компас / 3D">
+          <span class="material-symbols-outlined">explore</span>
+        </button>
+
+        <div class="mc-group">
+          <button class="mc-btn" id="btn-zoom-in" aria-label="Приблизить">
+            <span class="material-symbols-outlined">add</span>
+          </button>
+          <div class="mc-divider"></div>
+          <button class="mc-btn" id="btn-zoom-out" aria-label="Отдалить">
+            <span class="material-symbols-outlined">remove</span>
+          </button>
+        </div>
+
+        <button class="mc-btn" id="btn-geolocate" aria-label="Моя позиция">
+          <span class="material-symbols-outlined" style="color:var(--accent)">my_location</span>
+        </button>
+
+        <button class="mc-btn" id="btn-legend-toggle" aria-label="Легенда">
+          <span class="material-symbols-outlined">layers</span>
+        </button>
+      </div>
+
+      <div id="legend-panel" class="legend-panel glass hidden">
+        <div class="legend-handle"></div>
+        <h3 class="legend-title">Легенда</h3>
+
+        <div class="legend-items">
+          <label class="legend-item">
+            <span class="legend-dot" style="background:#F59E0B"></span>
+            <span>Нейрохроники</span>
+            <input type="checkbox" class="legend-toggle" data-layer="neuro" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+
+          <label class="legend-item">
+            <span class="legend-dot" style="background:#4A9EE0"></span>
+            <span>3D модели</span>
+            <input type="checkbox" class="legend-toggle" data-layer="3d" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+
+          <label class="legend-item">
+            <span class="legend-dot" style="background:#6B7280"></span>
+            <span>Здания</span>
+            <input type="checkbox" class="legend-toggle" data-layer="building" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+
+          <label class="legend-item">
+            <span class="legend-dot" style="background:#A78BFA"></span>
+            <span>Скульптуры</span>
+            <input type="checkbox" class="legend-toggle" data-layer="sculpture" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+
+          <label class="legend-item">
+            <span class="legend-dot" style="background:var(--accent-geo)"></span>
+            <span>Вы здесь</span>
+          </label>
+        </div>
+
+        <div class="legend-divider"></div>
+
+        <div class="legend-items">
+          <label class="legend-item">
+            <span class="legend-dot legend-dot-solid"></span>
+            <span>Существующие</span>
+            <input type="checkbox" class="legend-toggle" data-filter="exists" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+
+          <label class="legend-item">
+            <span class="legend-dot legend-dot-gone"></span>
+            <span>Утраченные</span>
+            <input type="checkbox" class="legend-toggle" data-filter="gone" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+      </div>
+
+      <div id="mobile-card" class="mobile-card glass hidden">
+        <div class="mc-handle-wrap">
+          <div class="mc-handle"></div>
+        </div>
+
+        <div class="mc-content">
+          <div class="mc-info">
+            <div class="mc-img-wrap">
+              <img id="mc-img" src="" alt="" />
+              <span id="mc-badge" class="badge"></span>
+            </div>
+
+            <div class="mc-text">
+              <h3 id="mc-title" class="mc-title"></h3>
+              <p id="mc-meta" class="mc-meta"></p>
+              <p id="mc-desc" class="mc-desc"></p>
+
+              <div id="mc-architect-list" class="mc-architect-list"></div>
+            </div>
+          </div>
+
+          <div class="mc-actions">
+            <button id="mc-btn-open" class="btn-primary">Открыть</button>
+            <button id="mc-btn-wiki" class="btn-glass">
+              <span class="material-symbols-outlined">menu_book</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-neuro" class="screen">
+      <header class="top-bar top-bar-neuro glass" id="neuro-topbar">
+        <button class="tb-btn" id="neuro-back" aria-label="Назад">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <span class="tb-title" id="neuro-title-text">Нейрохроника</span>
+        <button class="tb-btn" id="neuro-close" aria-label="Закрыть">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </header>
+
+      <div id="neuro-viewer" class="neuro-viewer">
+        <img id="neuro-img-restored" class="neuro-img" src="" alt="" />
+
+        <div id="neuro-compare" class="neuro-compare hidden">
+          <div id="neuro-before" class="neuro-half neuro-before">
+            <img id="neuro-img-bw" src="" alt="" />
+          </div>
+
+          <div id="neuro-after" class="neuro-half neuro-after">
+            <img id="neuro-img-color" src="" alt="" />
+          </div>
+
+          <div id="neuro-divider" class="neuro-divider">
+            <div class="neuro-divider-line"></div>
+            <div class="neuro-divider-handle">
+              <span class="material-symbols-outlined">compare_arrows</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="neuro-info-sheet" class="bottom-sheet glass hidden">
+        <div class="bs-handle-wrap"><div class="bs-handle"></div></div>
+        <div class="bs-content">
+          <h2 id="neuro-info-title" class="bs-title"></h2>
+          <p id="neuro-info-year" class="bs-meta"></p>
+          <p id="neuro-info-desc" class="bs-desc"></p>
+          <a id="neuro-info-source" href="#" target="_blank" class="bs-link"></a>
+        </div>
+      </div>
+
+      <div class="neuro-controls glass" id="neuro-controls">
+        <button class="nc-btn" id="neuro-btn-info" data-mode="info">
+          <span class="material-symbols-outlined">info</span>
+          <span class="nc-label">Инфо</span>
+        </button>
+        <button class="nc-btn" id="neuro-btn-compare" data-mode="compare">
+          <span class="material-symbols-outlined">compare</span>
+          <span class="nc-label">До / После</span>
+        </button>
+        <div class="neuro-nav-group" id="neuro-nav-group">
+          <button class="nc-nav-btn" id="neuro-btn-eye" aria-label="Режим просмотра">
+            <span class="material-symbols-outlined">visibility</span>
+          </button>
+          <button class="nc-nav-btn" id="neuro-prev" aria-label="Предыдущая">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          <span class="neuro-nav-counter" id="neuro-counter">1 / 1</span>
+          <button class="nc-nav-btn" id="neuro-next" aria-label="Следующая">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="neuro-eye-close hidden" id="neuro-eye-close" aria-label="Выйти из режима просмотра">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </section>
+
+    <section id="screen-3d-gallery" class="screen">
+      <div id="gallery-grid" class="gallery-grid"></div>
+    </section>
+
+    <section id="screen-3d-viewer" class="screen viewer-screen">
+      <header class="top-bar top-bar-viewer glass" id="viewer-top-bar">
+        <button class="tb-btn" id="viewer-back" aria-label="Назад">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <span class="tb-title" id="viewer-title-text"></span>
+        <button class="tb-btn" id="viewer-theme" aria-label="Сменить тему">
+          <span class="material-symbols-outlined" id="viewer-theme-icon">dark_mode</span>
+        </button>
+      </header>
+
+      <model-viewer
+        id="model-viewer"
+        src=""
+        poster=""
+        alt="3D модель"
+        camera-controls
+        auto-rotate
+        shadow-intensity="1"
+        environment-image="neutral"
+        style="width:100%;height:100%;background:transparent;"
+      ></model-viewer>
+
+      <div class="viewer-bottom-bar glass" id="viewer-bottom-bar">
+        <div class="viewer-bottom-actions">
+          <button class="va-btn" id="va-info" aria-label="Информация">
+            <span class="material-symbols-outlined">info</span>
+          </button>
+          <button class="va-btn" id="va-gallery" aria-label="Галерея">
+            <span class="material-symbols-outlined">photo_library</span>
+          </button>
+          <button class="va-btn" id="va-article" aria-label="Статья">
+            <span class="material-symbols-outlined">menu_book</span>
+          </button>
+          <button class="va-btn" id="va-ar" aria-label="AR">
+            <span class="material-symbols-outlined">view_in_ar</span>
+          </button>
+        </div>
+
+        <div class="viewer-nav-group">
+          <button class="vn-btn" id="viewer-prev" aria-label="Предыдущая модель">
+          <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          <button class="vn-btn" id="viewer-next" aria-label="Следующая модель">
+          <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="viewer-info-sheet" class="bottom-sheet glass hidden">
+        <div class="bs-handle-wrap"><div class="bs-handle"></div></div>
+        <div class="bs-content">
+          <h2 id="vi-title" class="bs-title"></h2>
+          <div id="vi-facts" class="vi-facts"></div>
+        </div>
+      </div>
+
+      <div id="viewer-article-sheet" class="bottom-sheet article-sheet glass hidden">
+        <div class="bs-handle-wrap"><div class="bs-handle"></div></div>
+        <div class="bs-content">
+          <h2 id="vas-title" class="as-title"></h2>
+          <div id="vas-body" class="as-body"></div>
+        </div>
+      </div>
+
+      <div id="viewer-gallery-sheet" class="bottom-sheet glass hidden">
+        <div class="bs-handle-wrap"><div class="bs-handle"></div></div>
+        <div class="bs-content">
+          <h3 class="bs-title">Галерея</h3>
+          <div id="vg-photos" class="vg-photos"></div>
+        </div>
+      </div>
+
+      <div id="lightbox" class="lightbox hidden">
+        <button id="lightbox-close" class="lightbox-close" aria-label="Закрыть">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+        <img id="lightbox-img" src="" alt="" />
+      </div>
+    </section>
+
+    <section id="screen-wiki" class="screen wiki-screen">
+      <button id="wiki-sidebar-toggle" class="wiki-sidebar-toggle glass" aria-label="Разделы">
+  <span class="wiki-toggle-side wiki-toggle-left">
+    <span class="material-symbols-outlined wiki-toggle-open-icon">chevron_right</span>
+    <span class="material-symbols-outlined wiki-toggle-theme-icon" id="wiki-theme-icon-mobile">dark_mode</span>
+  </span>
+
+  <span class="wiki-toggle-title">ВМАС Вики</span>
+
+  <span class="wiki-toggle-side wiki-toggle-right">
+    <span class="material-symbols-outlined wiki-toggle-collapse-icon">unfold_less</span>
+  </span>
+</button>
+
+      <nav id="wiki-sidebar" class="wiki-sidebar glass">
+  <div class="ws-header glass">
+  <div class="ws-header-actions ws-header-actions-left">
+    <button id="wiki-theme" class="tb-btn ws-theme-btn" aria-label="Сменить тему">
+      <span class="material-symbols-outlined" id="wiki-theme-icon">dark_mode</span>
+    </button>
+  </div>
+
+  <div class="ws-header-main">
+    <span class="ws-logo">ВМАС Вики</span>
+  </div>
+
+  <div class="ws-header-actions ws-header-actions-right">
+    <button id="wiki-collapse-all" class="tb-btn ws-collapse-btn" aria-label="Свернуть разделы">
+      <span class="material-symbols-outlined">unfold_less</span>
+    </button>
+  </div>
+</div>
+
+  <div class="ws-search-wrap">
+    <span class="material-symbols-outlined ws-search-icon">search</span>
+    <input type="text" id="wiki-search" class="ws-search" placeholder="Поиск..." />
+    <div id="wiki-search-results" class="ws-search-results hidden"></div>
+  </div>
+
+  <div id="wiki-nav" class="ws-nav">
+    <div class="ws-section" data-section="buildings">
+      <button class="ws-section-header">
+        <span class="material-symbols-outlined">domain</span>
+        <span>Здания</span>
+        <span class="material-symbols-outlined ws-chevron">expand_more</span>
+      </button>
+      <ul class="ws-list" id="ws-list-buildings"></ul>
+    </div>
+
+    <div class="ws-section" data-section="architects">
+      <button class="ws-section-header">
+        <span class="material-symbols-outlined">architecture</span>
+        <span>Архитекторы</span>
+        <span class="material-symbols-outlined ws-chevron">expand_more</span>
+      </button>
+      <ul class="ws-list" id="ws-list-architects"></ul>
+    </div>
+
+    <div class="ws-section" data-section="neuro">
+      <button class="ws-section-header">
+        <span class="material-symbols-outlined">auto_fix_high</span>
+        <span>Нейрохроники</span>
+        <span class="material-symbols-outlined ws-chevron">expand_more</span>
+      </button>
+      <ul class="ws-list" id="ws-list-neuro"></ul>
+    </div>
+
+    <div class="ws-section" data-section="sculptures">
+      <button class="ws-section-header">
+        <span class="material-symbols-outlined">emoji_objects</span>
+        <span>Скульптуры</span>
+        <span class="material-symbols-outlined ws-chevron">expand_more</span>
+      </button>
+      <ul class="ws-list" id="ws-list-sculptures"></ul>
+    </div>
+  </div>
+</nav>
+
+      <div id="wiki-article-area" class="wiki-article-area">
+        <div id="wiki-placeholder" class="wiki-placeholder">
+          <span class="material-symbols-outlined">menu_book</span>
+          <p>Выберите статью из списка слева</p>
+        </div>
+
+        <article id="wiki-article" class="wiki-article hidden">
+  <img id="wa-hero" src="" alt="" class="wa-hero" />
+  <div class="wa-inner">
+    <h1 id="wa-title" class="wa-title"></h1>
+    <div id="wa-facts" class="wa-facts"></div>
+
+    <div class="wa-actions">
+      <button id="wa-map-btn" class="btn-primary wa-map-btn">
+        <span class="material-symbols-outlined">map</span>
+        Открыть на карте
+      </button>
+      <button id="wa-view-btn" class="btn-primary wa-view-btn hidden">
+        <span class="material-symbols-outlined">visibility</span>
+        Посмотреть
+      </button>
+    </div>
+
+    <div id="wa-body" class="wa-body"></div>
+  </div>
+</article>
+
+<div id="wa-body" class="wa-body"></div>
+          </div>
+        </article>
+      </div>
+
+      <div id="wiki-overlay" class="wiki-overlay hidden"></div>
+    </section>
+
+    <section id="screen-home" class="screen home-screen">
+      <div class="home-scroll">
+
+        <div class="home-hero">
+          <img src="assets/logo.png" alt="ВМАС" class="home-logo" onerror="this.style.display='none'" />
+          <h1 class="home-title">ВМАС</h1>
+          <p class="home-tagline">Виртуальный музей архитектуры Сочи</p>
+        </div>
+
+        <div class="home-card glass">
+          <h2 class="home-section-title">О проекте</h2>
+          <p class="home-about-text">
+            ВМАС — цифровая платформа архитектурного наследия Сочи. Мы документируем
+            существующие и утраченные здания, создаём 3D-модели и нейрохроники —
+            реконструкции исторических фотографий с помощью искусственного интеллекта.
+          </p>
+        </div>
+
+        <div class="home-stats-grid">
+          <div class="home-stat-card glass">
+            <span class="material-symbols-outlined home-stat-icon" style="color:var(--accent)">map</span>
+            <span class="home-stat-value" id="stat-objects">—</span>
+            <span class="home-stat-label">объектов на карте</span>
+          </div>
+          <div class="home-stat-card glass">
+            <span class="material-symbols-outlined home-stat-icon" style="color:var(--accent)">view_in_ar</span>
+            <span class="home-stat-value" id="stat-models">—</span>
+            <span class="home-stat-label">3D-модели</span>
+          </div>
+          <div class="home-stat-card glass">
+            <span class="material-symbols-outlined home-stat-icon" style="color:var(--neuro)">auto_fix_high</span>
+            <span class="home-stat-value" id="stat-neuro">—</span>
+            <span class="home-stat-label">нейрохроники</span>
+          </div>
+          <div class="home-stat-card glass">
+            <span class="material-symbols-outlined home-stat-icon" style="color:var(--sculpture)">architecture</span>
+            <span class="home-stat-value" id="stat-architects">—</span>
+            <span class="home-stat-label">архитектора</span>
+          </div>
+        </div>
+
+        <a href="https://t.me/sochiarchmuseum" target="_blank" rel="noopener noreferrer"
+           class="home-tg-btn btn-primary">
+          <span class="material-symbols-outlined">send</span>
+          Телеграм-канал
+        </a>
+
+        <div class="home-card glass">
+          <h2 class="home-section-title">Как пользоваться</h2>
+          <div class="home-how-list">
+            <div class="home-how-item">
+              <span class="material-symbols-outlined home-how-icon" style="color:var(--accent)">map</span>
+              <div>
+                <p class="home-how-title">Карта</p>
+                <p class="home-how-desc">Исследуйте интерактивную карту зданий Сочи — существующих и утраченных. Нажмите на маркер, чтобы узнать историю объекта.</p>
+              </div>
+            </div>
+            <div class="home-how-item">
+              <span class="material-symbols-outlined home-how-icon" style="color:var(--accent)">menu_book</span>
+              <div>
+                <p class="home-how-title">Вики</p>
+                <p class="home-how-desc">Читайте статьи об архитекторах, зданиях и скульптурах с фотографиями и фактами.</p>
+              </div>
+            </div>
+            <div class="home-how-item">
+              <span class="material-symbols-outlined home-how-icon" style="color:var(--accent)">view_in_ar</span>
+              <div>
+                <p class="home-how-title">3D</p>
+                <p class="home-how-desc">Рассматривайте трёхмерные модели зданий с любого ракурса. Поддерживается AR на мобильных устройствах.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="home-footer">
+          <p class="home-footer-text">ВМАС · Виртуальный музей архитектуры Сочи</p>
+          <p class="home-footer-sub">Упомянут в федеральных изданиях · 220+ подписчиков</p>
+        </footer>
+
+      </div>
+    </section>
+
+    <nav class="tab-bar glass" id="tab-bar">
+      <div id="tab-indicator" class="tab-indicator"></div>
+
+      <button class="tab" data-tab="home">
+        <span class="material-symbols-outlined tab-icon">home</span>
+        <span class="tab-label">Главная</span>
+      </button>
+
+      <button class="tab active" data-tab="map">
+        <span class="material-symbols-outlined tab-icon">map</span>
+        <span class="tab-label">Карта</span>
+      </button>
+
+      <button class="tab" data-tab="wiki">
+        <span class="material-symbols-outlined tab-icon">menu_book</span>
+        <span class="tab-label">Вики</span>
+      </button>
+
+      <button class="tab" data-tab="3d">
+        <span class="material-symbols-outlined tab-icon">view_in_ar</span>
+        <span class="tab-label">3D</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "neuroch1",
+    "title": "Собор Архангела Михаила",
+    "short_desc": "Главный храм Сочи, возведённый в память об окончании Кавказской войны. Построен по проекту архитектора А.С. Каминского.",
+    "lat": 43.5820,
+    "lng": 39.7195,
+    "year": "1913",
+    "status": "exists",
+    "photo_restored": "assets/photos/neuroch1.jpg",
+    "photo_original": "assets/photos/neuroch1-bw.jpg",
+    "source_url": "https://pastvu.com",
+    "source_label": "Pastvu.com",
+    "wiki_slug": "sobor-arhangela",
+    "object_ids": []
+  },
+  {
+    "id": "neuroch2",
+    "title": "Сочинский маяк",
+    "short_desc": "Маяк на мысе Хустинский — один из старейших навигационных объектов черноморского побережья.",
+    "lat": 43.5775,
+    "lng": 39.7155,
+    "year": "1874",
+    "status": "exists",
+    "photo_restored": "assets/photos/neuroch2.jpg",
+    "photo_original": "assets/photos/neuroch2-bw.jpg",
+    "source_url": "https://pastvu.com",
+    "source_label": "Pastvu.com",
+    "wiki_slug": "mayak",
+    "object_ids": []
+  },
+  {
+    "id": "neuroch3",
+    "title": "Улица Пластунская",
+    "short_desc": "Главная торговая артерия дореволюционного Сочи. Сочинский «Бродвей» начала XX века.",
+    "lat": 43.5810,
+    "lng": 39.7215,
+    "year": "1905",
+    "status": "gone",
+    "photo_restored": "assets/photos/neuroch3.jpg",
+    "photo_original": "assets/photos/neuroch3-bw.jpg",
+    "source_url": "https://pastvu.com",
+    "source_label": "Pastvu.com",
+    "wiki_slug": "plastunoskaya",
+    "object_ids": []
+  }
+]
