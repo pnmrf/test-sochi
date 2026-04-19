@@ -180,7 +180,7 @@
       </div>
     </section>
 
-    <section id="screen-neuro" class="screen">
+        <section id="screen-neuro" class="screen">
       <header class="top-bar top-bar-neuro glass" id="neuro-topbar">
         <button class="tb-btn" id="neuro-back" aria-label="Назад">
           <span class="material-symbols-outlined">arrow_back</span>
@@ -192,21 +192,21 @@
       </header>
 
       <div id="neuro-viewer" class="neuro-viewer">
-        <img id="neuro-img-restored" class="neuro-img" src="" alt="" />
+        <div id="neuro-frame" class="neuro-frame">
+          <img id="neuro-img-restored" class="neuro-img" src="" alt="" />
 
-        <div id="neuro-compare" class="neuro-compare hidden">
-          <div id="neuro-before" class="neuro-half neuro-before">
-            <img id="neuro-img-bw" src="" alt="" />
-          </div>
+          <div id="neuro-compare" class="neuro-compare hidden">
+            <div id="neuro-before" class="neuro-half neuro-before">
+              <img id="neuro-img-bw" src="" alt="" />
+            </div>
 
-          <div id="neuro-after" class="neuro-half neuro-after">
-            <img id="neuro-img-color" src="" alt="" />
-          </div>
+            <div id="neuro-after" class="neuro-half neuro-after">
+              <img id="neuro-img-color" src="" alt="" />
+            </div>
 
-          <div id="neuro-divider" class="neuro-divider">
-            <div class="neuro-divider-line"></div>
-            <div class="neuro-divider-handle">
-              <span class="material-symbols-outlined">compare_arrows</span>
+            <div id="neuro-divider" class="neuro-divider">
+              <div class="neuro-divider-line"></div>
+              <div class="neuro-divider-handle"></div>
             </div>
           </div>
         </div>
@@ -222,66 +222,51 @@
         </div>
       </div>
 
-      <div class="neuro-controls glass" id="neuro-controls">
-        <button class="nc-btn" id="neuro-btn-compare" data-mode="compare" aria-label="Сравнить до и после">
-          <span class="material-symbols-outlined">compare</span>
-        </button>
-        <div class="nc-sep"></div>
-        <button class="nc-nav-btn" id="neuro-btn-eye" aria-label="Режим просмотра">
-          <span class="material-symbols-outlined">visibility</span>
-        </button>
-        <div class="neuro-nav-group" id="neuro-nav-group">
-          <button class="nc-nav-btn" id="neuro-prev" aria-label="Предыдущая">
-            <span class="material-symbols-outlined">chevron_left</span>
-          </button>
-          <span class="neuro-nav-counter" id="neuro-counter">1 / 1</span>
-          <button class="nc-nav-btn" id="neuro-next" aria-label="Следующая">
-            <span class="material-symbols-outlined">chevron_right</span>
-          </button>
-        </div>
-        <div class="nc-sep"></div>
-        <button class="nc-btn" id="neuro-btn-info" data-mode="info" aria-label="Информация">
-          <span class="material-symbols-outlined">info</span>
-        </button>
-      </div>
-
-      <button class="neuro-eye-close hidden" id="neuro-eye-close" aria-label="Выйти из режима просмотра">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-
-      <!-- Кнопка открытия боковой панели нейрохроник -->
       <button id="neuro-sidebar-toggle" class="neuro-sidebar-toggle glass" aria-label="Открыть меню">
         <span class="material-symbols-outlined neuro-toggle-icon">chevron_right</span>
       </button>
 
-      <!-- Боковая панель нейрохроник -->
       <nav id="neuro-sidebar" class="neuro-sidebar glass">
-        <!-- Заголовок панели с кнопкой закрытия -->
         <div class="ns-header glass">
           <button id="neuro-sidebar-close" class="tb-btn ns-close-btn" aria-label="Закрыть меню">
             <span class="material-symbols-outlined">chevron_left</span>
           </button>
-          <span class="ns-logo">ВМАС</span>
+          <span class="ns-logo">НЕЙРОХРОНИКИ</span>
           <div style="width: 40px;"></div>
         </div>
 
-        <!-- Верхний блок: краткая информация -->
         <div class="ns-info-section">
-          <div id="neuro-sidebar-info" class="neuro-info-card">
-            <!-- Заполняется JS -->
-          </div>
+          <div id="neuro-sidebar-info" class="neuro-info-card"></div>
         </div>
 
-        <!-- Нижний блок: список нейрохроник (прокручиваемый) -->
         <div class="ns-list-section">
-          <ul id="neuro-sidebar-list" class="ns-list">
-            <!-- Заполняется JS -->
-          </ul>
+          <ul id="neuro-sidebar-list" class="ns-list"></ul>
+        </div>
+
+        <div class="neuro-controls" id="neuro-controls">
+          <button class="nc-btn" id="neuro-btn-eye" aria-label="Режим просмотра">
+            <span class="material-symbols-outlined">visibility</span>
+          </button>
+          <div class="neuro-nav-group" id="neuro-nav-group">
+            <button class="nc-nav-btn" id="neuro-prev" aria-label="Предыдущая">
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <span class="neuro-nav-counter" id="neuro-counter">1 / 1</span>
+            <button class="nc-nav-btn" id="neuro-next" aria-label="Следующая">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
+          <button class="nc-btn" id="neuro-btn-compare" data-mode="compare" aria-label="Сравнить до и после">
+            <span class="material-symbols-outlined">compare</span>
+          </button>
         </div>
       </nav>
 
-      <!-- Оверлей для закрытия панели -->
       <div id="neuro-overlay" class="neuro-overlay hidden"></div>
+    </section>
+
+    <section id="screen-neuro-gallery" class="screen">
+      <div id="neuro-gallery-grid" class="gallery-grid"></div>
     </section>
 
     <section id="screen-3d-gallery" class="screen">
@@ -564,13 +549,8 @@
       </div>
     </section>
 
-    <nav class="tab-bar glass" id="tab-bar">
+        <nav class="tab-bar glass" id="tab-bar">
       <div id="tab-indicator" class="tab-indicator"></div>
-
-      <button class="tab" data-tab="home">
-        <span class="material-symbols-outlined tab-icon">home</span>
-        <span class="tab-label">Главная</span>
-      </button>
 
       <button class="tab active" data-tab="map">
         <span class="material-symbols-outlined tab-icon">map</span>
@@ -582,9 +562,19 @@
         <span class="tab-label">Вики</span>
       </button>
 
+      <button class="tab" data-tab="neuro">
+        <span class="material-symbols-outlined tab-icon">auto_fix_high</span>
+        <span class="tab-label">Нейро</span>
+      </button>
+
       <button class="tab" data-tab="3d">
         <span class="material-symbols-outlined tab-icon">view_in_ar</span>
         <span class="tab-label">3D</span>
+      </button>
+
+      <button class="tab" data-tab="home">
+        <span class="material-symbols-outlined tab-icon">home</span>
+        <span class="tab-label">Главная</span>
       </button>
     </nav>
 

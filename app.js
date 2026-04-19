@@ -472,7 +472,7 @@
       primaryLabel = 'Нейрохроника';
       primaryIcon = 'auto_fix_high';
       showWikiBtn = true;
-      openFn = () => openNeuro(obj, 'map');
+      openFn = () => { STATE.neuroCompareMode = false; openNeuro(obj, 'map'); };
     }
 
     const sc = $('sidebar-card');
@@ -552,7 +552,13 @@
     STATE.currentObject = obj;
 
     $('neuro-title-text').textContent = obj.title;
-    $('neuro-img-restored').src = obj.photo_restored || '';
+
+    const imgEl = $('neuro-img-restored');
+    imgEl.onload = null;
+    imgEl.src = obj.photo_restored || '';
+    const frame = $('neuro-frame');
+    if (frame) frame.style.aspectRatio = '';
+
     $('neuro-img-color').src = obj.photo_restored || '';
     $('neuro-img-bw').src = obj.photo_original || '';
 
@@ -562,26 +568,28 @@
     $('neuro-info-source').textContent = obj.source_label ? `Источник: ${obj.source_label}` : '';
     $('neuro-info-source').href = obj.source_url || '#';
 
-    const keepCompare = preserveCompare && STATE.neuroCompareMode;
-    if (keepCompare) {
+    if (STATE.neuroCompareMode) {
+      hideBottomSheet();
+      // active уже сохранён благодаря исправленному hideBottomSheet,
+      // но на всякий случай ставим явно:
       $('neuro-btn-info').classList.remove('active');
       $('neuro-btn-compare').classList.add('active');
-      hideBottomSheet();
+      show($('neuro-compare'));
+      hide($('neuro-img-restored'));
+      initNeuroSlider(false);
     } else {
-      document.querySelectorAll('.nc-btn').forEach(b => b.classList.remove('active'));
       STATE.neuroCompareMode = false;
       hideBottomSheet();
+      document.querySelectorAll('.nc-btn').forEach(b => b.classList.remove('active'));
       show($('neuro-img-restored'));
       hide($('neuro-compare'));
     }
 
     if (!preserveEyeMode) {
-      $('neuro-controls').classList.remove('eye-mode');
-      const screen = $('screen-neuro');
-      if (screen) screen.classList.remove('eye-mode');
-      show($('neuro-topbar'));
-      hide($('neuro-eye-close'));
+      $('neuro-controls').classList.remove('view-mode');
+      $('neuro-btn-eye')?.classList.remove('active');
     }
+    hide($('neuro-topbar'));
 
     const idx = STATE.neurochronicles.indexOf(obj);
     if (idx !== -1) STATE.neuroIndex = idx;
@@ -591,6 +599,9 @@
     updateNeuroSidebar();
 
     switchScreen('neuro');
+
+    // Принудительно добавляем класс
+    document.getElementById('app').classList.add('neuro-active');
   }
 
   function updateNeuroCounter() {
@@ -603,26 +614,40 @@
     const items = STATE.neurochronicles;
     if (!items.length) return;
     STATE.neuroIndex = (STATE.neuroIndex + dir + items.length) % items.length;
-    const isEyeMode = $('neuro-controls').classList.contains('eye-mode');
+    const isEyeMode = $('neuro-controls').classList.contains('view-mode');
     openNeuro(items[STATE.neuroIndex], STATE.neuroFrom, isEyeMode, STATE.neuroCompareMode);
   }
 
-  function toggleNeuroEyeMode() {
-    const controls = $('neuro-controls');
-    const screen = $('screen-neuro');
-    const isEye = controls.classList.contains('eye-mode');
-    if (isEye) {
-      controls.classList.remove('eye-mode');
-      if (screen) screen.classList.remove('eye-mode');
-      show($('neuro-topbar'));
-      hide($('neuro-eye-close'));
-    } else {
-      controls.classList.add('eye-mode');
-      if (screen) screen.classList.add('eye-mode');
-      hide($('neuro-topbar'));
-      show($('neuro-eye-close'));
+function toggleNeuroEyeMode() {
+  const controls = $('neuro-controls');
+  const eyeBtn = $('neuro-btn-eye');
+  const isEye = controls.classList.contains('view-mode');
+
+  if (isEye) {
+    // Выходим из полноэкранного режима
+    controls.classList.remove('view-mode');
+    if (eyeBtn) eyeBtn.classList.remove('active');
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else if (document.webkitFullscreenElement) {
+      document.webkitExitFullscreen();
+    }
+  } else {
+    // Входим в полноэкранный режим
+    controls.classList.add('view-mode');
+    if (eyeBtn) eyeBtn.classList.add('active');
+
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(() => {});
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
     }
   }
+}
 
   function openNeuroSidebar() {
     $('neuro-sidebar').classList.add('open');
@@ -676,104 +701,134 @@
     }
   }
 
-  function setNeuroMode(mode) {
-    const compare = $('neuro-compare');
-    const restored = $('neuro-img-restored');
-    const infoBtn = $('neuro-btn-info');
-    const compareBtn = $('neuro-btn-compare');
+function setNeuroMode(mode) {
+  const compare = $('neuro-compare');
+  const restored = $('neuro-img-restored');
+  const compareBtn = $('neuro-btn-compare');
 
-    if (mode === 'compare') {
-      if (compareBtn.classList.contains('active')) {
-        compareBtn.classList.remove('active');
-        show(restored);
-        hide(compare);
-        STATE.neuroCompareMode = false;
-        return;
-      }
-
-      infoBtn.classList.remove('active');
-      hide(restored);
-      show(compare);
-      hideBottomSheet();
-      compareBtn.classList.add('active');
-      STATE.neuroCompareMode = true;
-      initNeuroSlider();
-
-    } else if (mode === 'info') {
-      if (infoBtn.classList.contains('active')) {
-        infoBtn.classList.remove('active');
-        hideBottomSheet();
-        return;
-      }
-
-      infoBtn.classList.add('active');
+  if (mode === 'compare') {
+    if (STATE.neuroCompareMode) {
       compareBtn.classList.remove('active');
-      STATE.neuroCompareMode = false;
       show(restored);
       hide(compare);
-      openBottomSheet($('neuro-info-sheet'));
+      STATE.neuroCompareMode = false;
+      return;
     }
+
+    hide(restored);
+    show(compare);
+    hideBottomSheet();
+    compareBtn.classList.add('active');
+    STATE.neuroCompareMode = true;
+    initNeuroSlider(true);
   }
+}
 
   // ── NEURO SLIDER ────────────────────────────
   let sliderDragging = false;
   let sliderListenersSet = false;
 
-  function initNeuroSlider() {
-    const divider = $('neuro-divider');
-    const before = $('neuro-before');
-    if (!divider || !before) return;
+  function initNeuroSlider(resetPosition = false) {
+  const divider = $('neuro-divider');
+  const before = $('neuro-before');
+  const container = $('neuro-compare');
+  if (!divider || !before || !container) return;
 
-    function setPos(x) {
-      const container = $('neuro-compare');
-      if (!container) return;
+  function setPos(x) {
+    const rect = container.getBoundingClientRect();
+    const relX = x - rect.left;
+    const pct = Math.min(Math.max(relX / rect.width, 0.02), 0.98);
 
-      const rect = container.getBoundingClientRect();
-      const relX = x - rect.left;
-      const pct = Math.min(Math.max(relX / rect.width, 0.02), 0.98);
+    before.style.clipPath = `inset(0 ${(1 - pct) * 100}% 0 0)`;
+    divider.style.left = `${pct * 100}%`;
+  }
 
-      before.style.clipPath = `inset(0 ${(1 - pct) * 100}% 0 0)`;
-      divider.style.left = `${pct * 100}%`;
-    }
+  if (!sliderListenersSet) {
+    // Drag по divider (вся линия)
+    divider.addEventListener('mousedown', e => {
+      sliderDragging = true;
+      e.preventDefault();
+      setPos(e.clientX);
+    });
 
-    if (!sliderListenersSet) {
-      divider.addEventListener('mousedown', e => {
-        sliderDragging = true;
-        e.preventDefault();
-      });
+    divider.addEventListener('touchstart', e => {
+      sliderDragging = true;
+      e.preventDefault();
+      setPos(e.touches[0].clientX);
+    }, { passive: false });
 
-      window.addEventListener('mousemove', e => {
-        if (sliderDragging) setPos(e.clientX);
-      });
+    // Клик по контейнеру — мгновенный переход
+    container.addEventListener('mousedown', e => {
+      if (e.target.closest('.neuro-divider')) return;
+      sliderDragging = true;
+      e.preventDefault();
+      setPos(e.clientX);
+    });
 
-      window.addEventListener('mouseup', () => {
-        sliderDragging = false;
-      });
+    container.addEventListener('touchstart', e => {
+      if (e.target.closest('.neuro-divider')) return;
+      sliderDragging = true;
+      setPos(e.touches[0].clientX);
+    }, { passive: true });
 
-      divider.addEventListener('touchstart', e => {
-        sliderDragging = true;
-        e.preventDefault();
-      }, { passive: false });
+    // Move
+    window.addEventListener('mousemove', e => {
+      if (sliderDragging) setPos(e.clientX);
+    });
 
-      window.addEventListener('touchmove', e => {
-        if (sliderDragging) setPos(e.touches[0].clientX);
-      });
+    window.addEventListener('touchmove', e => {
+      if (sliderDragging) setPos(e.touches[0].clientX);
+    });
 
-      window.addEventListener('touchend', () => {
-        sliderDragging = false;
-      });
+    // End
+    window.addEventListener('mouseup', () => {
+      sliderDragging = false;
+    });
 
-      sliderListenersSet = true;
-    }
+    window.addEventListener('touchend', () => {
+      sliderDragging = false;
+    });
 
+    sliderListenersSet = true;
+  }
+
+  if (resetPosition) {
     requestAnimationFrame(() => {
-      const container = $('neuro-compare');
-      if (container) {
-        const rect = container.getBoundingClientRect();
-        setPos(rect.left + rect.width / 2);
-      }
+      const rect = container.getBoundingClientRect();
+      setPos(rect.left + rect.width / 2);
     });
   }
+}
+
+  // ── NEURO GALLERY ──────────────────────────
+  function renderNeuroGallery() {
+  const grid = $('neuro-gallery-grid');
+  if (!grid) return;
+
+  const items = STATE.neurochronicles;
+  grid.innerHTML = '';
+
+  items.forEach(obj => {
+    const card = document.createElement('div');
+    card.className = 'gallery-card neuro-gallery-card';
+    const colorImg = obj.photo_restored || obj.photo_original || '';
+    const bwImg = obj.photo_original || obj.photo_restored || '';
+    card.innerHTML = `
+      <img class="ngc-color" src="${colorImg}" alt="${obj.title || ''}" onerror="this.src='assets/photos/placeholder.jpg'" />
+      <img class="ngc-bw" src="${bwImg}" alt="" onerror="this.src='assets/photos/placeholder.jpg'" />
+      <div class="gallery-card-overlay" style="z-index:2;">
+        <div class="gallery-card-title">${obj.title || ''}</div>
+        <div class="gallery-card-year">${obj.year || ''}</div>
+      </div>`;
+
+    card.addEventListener('click', () => {
+      STATE.neuroCompareMode = false;
+      openNeuro(obj, 'neuro');
+    });
+
+    grid.appendChild(card);
+  });
+}
 
   // ── 3D GALLERY ─────────────────────────────
   function renderGallery() {
@@ -928,15 +983,14 @@
     STATE.activeBottomSheet = el;
   }
 
-  function hideBottomSheet() {
-    if (STATE.activeBottomSheet) {
-      STATE.activeBottomSheet.classList.add('hidden');
-      STATE.activeBottomSheet = null;
-    }
-
-    document.querySelectorAll('.va-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.nc-btn').forEach(b => b.classList.remove('active'));
+function hideBottomSheet() {
+  if (STATE.activeBottomSheet) {
+    STATE.activeBottomSheet.classList.add('hidden');
+    STATE.activeBottomSheet = null;
   }
+
+  document.querySelectorAll('.va-btn').forEach(b => b.classList.remove('active'));
+}
 
   function initSheetSwipe(sheet) {
     const handle = sheet.querySelector('.bs-handle-wrap');
@@ -1187,7 +1241,7 @@
 
         if (obj.type === 'neuro') {
           viewBtn.innerHTML = '<span class="material-symbols-outlined">auto_fix_high</span> Посмотреть';
-          viewBtn.onclick = () => openNeuro(obj, 'wiki');
+          viewBtn.onclick = () => { STATE.neuroCompareMode = false; openNeuro(obj, 'wiki'); };
         } else {
           viewBtn.innerHTML = '<span class="material-symbols-outlined">view_in_ar</span> 3D модель';
           viewBtn.onclick = () => open3dViewer(obj, 'wiki');
@@ -1338,12 +1392,15 @@ function toggleMobileSidebar() {
 }
 
   // ── SCREEN SWITCHING ────────────────────────
-  function switchScreen(name) {
+    function switchScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
 
     const hideGlobalBars = name === '3d-viewer' || name === 'neuro' || name === 'wiki';
     $('top-bar').style.display = hideGlobalBars ? 'none' : '';
-$('tab-bar').style.display = (name === '3d-viewer' || name === 'neuro') ? 'none' : '';
+    $('tab-bar').style.display = (name === '3d-viewer') ? 'none' : '';
+
+    // Класс для прозрачности таб-бара в нейрохрониках
+    $('app').classList.toggle('neuro-active', name === 'neuro');
 
     const screen = $(`screen-${name}`);
     if (screen) screen.classList.add('active');
@@ -1378,6 +1435,9 @@ $('tab-bar').style.display = (name === '3d-viewer' || name === 'neuro') ? 'none'
     $('top-bar').style.display = '';
     $('tab-bar').style.display = '';
 
+    // Сбросить класс нейро-режима при смене вкладки
+    $('app').classList.remove('neuro-active');
+
     hideBottomSheet();
 
     if (tab === 'map') {
@@ -1388,6 +1448,9 @@ $('tab-bar').style.display = (name === '3d-viewer' || name === 'neuro') ? 'none'
         setTimeout(() => updateMarkerVisibility(), 60);
         setTimeout(() => updateMarkerVisibility(), 320);
       }
+    } else if (tab === 'neuro') {
+      renderNeuroGallery();
+      switchScreen('neuro-gallery');
     } else if (tab === '3d') {
       renderGallery();
       switchScreen('3d-gallery');
@@ -1405,6 +1468,8 @@ $('tab-bar').style.display = (name === '3d-viewer' || name === 'neuro') ? 'none'
 
     if (STATE.activeTab === '3d') {
       title.textContent = '3D-экспонаты';
+    } else if (STATE.activeTab === 'neuro') {
+      title.textContent = 'Нейрохроники';
     } else {
       title.textContent = 'ВМАС';
     }
@@ -1544,7 +1609,9 @@ if (wikiThemeBtn) {
 
     $('neuro-back').addEventListener('click', () => {
       hideBottomSheet();
-      switchTab(STATE.neuroFrom === 'wiki' ? 'wiki' : 'map');
+      if (STATE.neuroFrom === 'wiki') switchTab('wiki');
+      else if (STATE.neuroFrom === 'neuro') switchTab('neuro');
+      else switchTab('map');
     });
 
     $('neuro-close').addEventListener('click', () => {
@@ -1552,12 +1619,10 @@ if (wikiThemeBtn) {
       switchTab('map');
     });
 
-    $('neuro-btn-info').addEventListener('click', () => setNeuroMode('info'));
-    $('neuro-btn-compare').addEventListener('click', () => setNeuroMode('compare'));
-    $('neuro-prev').addEventListener('click', () => navigateNeuro(-1));
-    $('neuro-next').addEventListener('click', () => navigateNeuro(+1));
+    $('neuro-btn-compare').addEventListener('click', (e) => { e.stopPropagation(); setNeuroMode('compare'); });
+    $('neuro-prev').addEventListener('click', (e) => { e.stopPropagation(); navigateNeuro(-1); });
+    $('neuro-next').addEventListener('click', (e) => { e.stopPropagation(); navigateNeuro(+1); });
     $('neuro-btn-eye').addEventListener('click', toggleNeuroEyeMode);
-    $('neuro-eye-close').addEventListener('click', toggleNeuroEyeMode);
 
     // ── NEURO SIDEBAR EVENT HANDLERS ──
     const neuroToggle = $('neuro-sidebar-toggle');
@@ -1590,8 +1655,7 @@ if (wikiThemeBtn) {
       if (isNaN(idx)) return;
 
       STATE.neuroIndex = idx;
-      openNeuro(STATE.neurochronicles[idx], STATE.neuroFrom);
-      closeNeuroSidebar();
+      openNeuro(STATE.neurochronicles[idx], STATE.neuroFrom, false, STATE.neuroCompareMode);
     });
 
     $('viewer-back').addEventListener('click', () => {
@@ -1679,12 +1743,6 @@ if (articleArea) {
 
     document.querySelectorAll('.bottom-sheet, .article-sheet').forEach(initSheetSwipe);
 
-    $('neuro-info-sheet').addEventListener('click', (e) => {
-      if (!e.target.closest('a, button, input, textarea, select')) {
-        setNeuroMode('info');
-      }
-    });
-
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         if (STATE.activeBottomSheet) {
@@ -1700,7 +1758,27 @@ if (articleArea) {
     viewerThemeBtn.addEventListener('click', toggleTheme);
   }
 
+  // В конец функции initEvents() добавить:
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) {
+    const controls = $('neuro-controls');
+    const eyeBtn = $('neuro-btn-eye');
+    if (controls) controls.classList.remove('view-mode');
+    if (eyeBtn) eyeBtn.classList.remove('active');
   }
+});
+
+document.addEventListener('webkitfullscreenchange', () => {
+  if (!document.webkitFullscreenElement) {
+    const controls = $('neuro-controls');
+    const eyeBtn = $('neuro-btn-eye');
+    if (controls) controls.classList.remove('view-mode');
+    if (eyeBtn) eyeBtn.classList.remove('active');
+  }
+});
+
+  }
+  
 
   // ── INIT ────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {

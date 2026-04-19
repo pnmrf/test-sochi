@@ -300,7 +300,7 @@ input {
   position: absolute;
   top: 6px;
   left: 8px;
-  width: calc((100% - 16px) / 4);
+  width: calc((100% - 16px) / 5);
   height: calc(100% - 12px);
   border-radius: var(--radius-pill);
   background: rgba(0, 0, 0, 0.06);
@@ -929,12 +929,34 @@ body.dark .tab-indicator {
 
 .neuro-viewer {
   position: absolute;
-  inset: 0;
-  background: #111;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 360px;
+  background: var(--bg);
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  padding-bottom: 0;
+  box-sizing: border-box;
+}
+
+#screen-neuro.eye-mode .neuro-viewer {
+  padding-bottom: 0;
+}
+
+.neuro-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
   overflow: hidden;
+  background: var(--bg);
 }
 
 .neuro-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -974,13 +996,6 @@ body.dark .tab-indicator {
   filter: grayscale(100%) sepia(10%);
 }
 
-@media (orientation: portrait) {
-  .neuro-img,
-  .neuro-half img {
-    object-fit: contain;
-  }
-}
-
 .neuro-label {
   position: absolute;
   bottom: calc(var(--tab-h) + 80px);
@@ -1002,17 +1017,23 @@ body.dark .tab-indicator {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: rgba(255,255,255,0.9);
+  width: 32px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
-  pointer-events: none;
+  pointer-events: all;
+  cursor: ew-resize;
+  background: transparent;
 }
 
 .neuro-divider-line {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .neuro-divider-handle {
@@ -1020,30 +1041,116 @@ body.dark .tab-indicator {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 44px;
-  height: 44px;
-  background: white;
-  border-radius: 50%;
+  width: 2px;
+  height: 48px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
   pointer-events: all;
   cursor: ew-resize;
+  padding: 0;
+}
+
+/* Утолщённый центральный отрезок */
+.neuro-divider-handle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 100%;
+  background: white;
+  border-radius: 2px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Треугольники-стрелки */
+.neuro-divider-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 12px;
+  background: transparent;
+  /* Два треугольника через clip-path не подходят для ::after,
+     используем border-trick с двумя треугольниками через box-shadow */
+}
+
+/* Левый треугольник */
+.neuro-divider-handle .neuro-arrow-left,
+.neuro-divider-handle .neuro-arrow-right {
+  display: none;
+}
+
+/* Переопределяем — треугольники через псевдоэлементы самого divider */
+.neuro-divider::before,
+.neuro-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  z-index: 11;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+}
+
+/* Левый треугольник ◀ */
+.neuro-divider::before {
+  right: 100%;
+  margin-right: 6px;
+  transform: translateY(-50%);
+  border-width: 6px 7px 6px 0;
+  border-color: transparent white transparent transparent;
+}
+
+/* Правый треугольник ▶ */
+.neuro-divider::after {
+  left: 100%;
+  margin-left: 6px;
+  transform: translateY(-50%);
+  border-width: 6px 0 6px 7px;
+  border-color: transparent transparent transparent white;
 }
 
 .neuro-controls {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  bottom: auto;
+  left: auto;
+  transform: none;
+  flex-shrink: 0;
+  margin-top: auto;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
   min-height: 54px;
-  border-radius: var(--radius-pill);
-  z-index: 200;
+  border-top: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 0;
+  box-shadow: none;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Добавь эти два блока сразу после */
+.neuro-controls.view-mode {
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.neuro-controls.view-mode:hover {
+  opacity: 1;
 }
 
 .nc-btn {
@@ -1064,6 +1171,12 @@ body.dark .tab-indicator {
   box-shadow: 0 2px 12px rgba(74,158,224,0.35);
 }
 
+.nc-nav-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(74,158,224,0.35);
+}
+
 #neuro-btn-info.active {
   background: transparent;
   color: var(--text);
@@ -1078,12 +1191,7 @@ body.dark .tab-indicator {
 }
 
 .nc-sep {
-  width: 1px;
-  height: 22px;
-  background: var(--glass-border);
-  flex-shrink: 0;
-  align-self: center;
-  margin: 0 2px;
+  display: none;
 }
 
 .nc-nav-btn {
@@ -1099,7 +1207,9 @@ body.dark .tab-indicator {
 }
 
 .nc-nav-btn:hover { background: rgba(0,0,0,0.06); }
+.nc-nav-btn.active:hover { background: var(--accent); }
 body.dark .nc-nav-btn:hover { background: rgba(255,255,255,0.08); }
+body.dark .nc-nav-btn.active:hover { background: var(--accent); }
 .nc-nav-btn:active { transform: scale(0.92); }
 
 .neuro-nav-counter {
@@ -1128,65 +1238,9 @@ body.dark .nc-nav-btn:hover { background: rgba(255,255,255,0.08); }
   color: var(--text);
 }
 
-
-.neuro-eye-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.3);
-  background: rgba(0,0,0,0.18);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  z-index: 250;
-  transition: background var(--transition), opacity var(--transition);
-}
-
-.neuro-eye-close:hover {
-  background: rgba(0,0,0,0.35);
-}
-
 /* ── 10.1 NEURO SIDEBAR TOGGLE ── */
 .neuro-sidebar-toggle {
-  position: fixed;
-  top: 8px;
-  left: 8px;
-  z-index: 1040;
   display: none;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: var(--radius-pill);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text);
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.neuro-sidebar-toggle:active {
-  transform: scale(0.92);
-}
-
-@media (max-width: 767px) {
-  .neuro-sidebar-toggle {
-    display: flex;
-  }
-}
-
-#screen-neuro.eye-mode .neuro-sidebar-toggle {
-  opacity: 0.65;
 }
 
 /* ── 10.2 NEURO SIDEBAR ── */
@@ -1194,27 +1248,14 @@ body.dark .nc-nav-btn:hover { background: rgba(255,255,255,0.08); }
   position: fixed;
   left: 0;
   top: 0;
-  width: 100%;
-  max-width: 340px;
+  width: 360px;
   height: 100dvh;
   z-index: 1050;
   background: var(--glass-bg);
   border-right: 1px solid var(--glass-border);
-  transform: translateX(-100%);
-  transition: transform var(--transition);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-.neuro-sidebar.open {
-  transform: translateX(0);
-}
-
-@media (max-width: 767px) {
-  .neuro-sidebar {
-    max-width: 100%;
-  }
 }
 
 /* ── 10.3 SIDEBAR HEADER ── */
@@ -1323,16 +1364,6 @@ body.dark .nc-nav-btn:hover { background: rgba(255,255,255,0.08); }
 
 /* ── 10.7 NEURO OVERLAY ── */
 .neuro-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1045;
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.neuro-overlay.hidden {
   display: none;
 }
 
@@ -1495,6 +1526,38 @@ body.dark .nc-nav-btn:hover { background: rgba(255,255,255,0.08); }
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Neuro gallery card: b&w by default, color on hover */
+.neuro-gallery-card:hover {
+  transform: none;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.ngc-bw,
+.ngc-color {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Цветное — нижний слой */
+.ngc-color {
+  z-index: 0;
+}
+
+/* Ч/Б — верхний слой, по умолчанию видно */
+.ngc-bw {
+  z-index: 1;
+  opacity: 1;
+  transition: opacity 0.55s ease;
+}
+
+/* При наведении ч/б исчезает → проступает цвет */
+.neuro-gallery-card:hover .ngc-bw {
+  opacity: 0;
 }
 
 .gallery-card-overlay {
@@ -2648,4 +2711,14 @@ body.dark .wa-badges .badge.reconstructed {
   .maplibregl-ctrl-bottom-right {
     bottom: 12px;
   }
+}
+
+/* ── Tab bar прозрачность в режиме нейрохроник ── */
+#app.neuro-active .tab-bar {
+  opacity: 0.35 !important;
+  transition: opacity 0.3s ease;
+}
+
+#app.neuro-active .tab-bar:hover {
+  opacity: 1 !important;
 }
