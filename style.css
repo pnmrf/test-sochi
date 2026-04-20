@@ -42,7 +42,7 @@
   --reconstructed-bg: rgba(74, 158, 224, 0.14);
 }
 
-body.dark {
+html.dark {
   --bg: #111213;
   --surface: #1C1D1F;
   --text: #F0EEE9;
@@ -309,7 +309,7 @@ input {
   pointer-events: none;
 }
 
-body.dark .tab-indicator {
+html.dark .tab-indicator {
   background: rgba(255,255,255,0.08);
 }
 
@@ -1208,8 +1208,8 @@ body.dark .tab-indicator {
 
 .nc-nav-btn:hover { background: rgba(0,0,0,0.06); }
 .nc-nav-btn.active:hover { background: var(--accent); }
-body.dark .nc-nav-btn:hover { background: rgba(255,255,255,0.08); }
-body.dark .nc-nav-btn.active:hover { background: var(--accent); }
+html.dark .nc-nav-btn:hover { background: rgba(255,255,255,0.08); }
+html.dark .nc-nav-btn.active:hover { background: var(--accent); }
 .nc-nav-btn:active { transform: scale(0.92); }
 
 .neuro-nav-counter {
@@ -1642,7 +1642,7 @@ body.dark .nc-nav-btn.active:hover { background: var(--accent); }
   background: #EDEEF0;
 }
 
-body.dark .viewer-screen {
+html.dark .viewer-screen {
   background: #111213;
 }
 
@@ -1715,8 +1715,8 @@ model-viewer {
   background: rgba(0,0,0,0.06);
 }
 
-body.dark .va-btn:hover,
-body.dark .vn-btn:hover {
+html.dark .va-btn:hover,
+html.dark .vn-btn:hover {
   background: rgba(255,255,255,0.08);
 }
 
@@ -2176,12 +2176,12 @@ body.dark .vn-btn:hover {
   padding: 20px 0 0;
 }
 
-body.dark .wa-badges .badge.restored {
+html.dark .wa-badges .badge.restored {
   color: #FCD34D;
   border-color: rgba(245, 158, 11, 0.28);
 }
 
-body.dark .wa-badges .badge.reconstructed {
+html.dark .wa-badges .badge.reconstructed {
   color: #93C5FD;
   border-color: rgba(74, 158, 224, 0.30);
 }

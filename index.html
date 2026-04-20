@@ -19,6 +19,7 @@
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
+  <script>(function(){var t=localStorage.getItem('vmas-theme');if(t==='dark'||(t===null&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');})()</script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -389,7 +390,7 @@
 
   <div class="ws-search-wrap">
     <span class="material-symbols-outlined ws-search-icon">search</span>
-    <input type="text" id="wiki-search" class="ws-search" placeholder="Поиск..." />
+    <input type="text" id="wiki-search" class="ws-search" placeholder="Поиск..." aria-label="Поиск по вики" />
     <div id="wiki-search-results" class="ws-search-results hidden"></div>
   </div>
 
@@ -458,10 +459,6 @@
     <div id="wa-body" class="wa-body"></div>
   </div>
 </article>
-
-<div id="wa-body" class="wa-body"></div>
-          </div>
-        </article>
       </div>
 
       <div id="wiki-overlay" class="wiki-overlay hidden"></div>

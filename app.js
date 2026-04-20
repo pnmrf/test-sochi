@@ -325,6 +325,7 @@
       img.src = getPrimaryImage(item);
       img.alt = item.title;
       img.onerror = () => {
+        img.onerror = null;
         img.style.display = 'none';
       };
       prev.appendChild(img);
@@ -572,7 +573,7 @@
       hideBottomSheet();
       // active уже сохранён благодаря исправленному hideBottomSheet,
       // но на всякий случай ставим явно:
-      $('neuro-btn-info').classList.remove('active');
+      $('neuro-btn-info')?.classList.remove('active');
       $('neuro-btn-compare').classList.add('active');
       show($('neuro-compare'));
       hide($('neuro-img-restored'));
@@ -814,8 +815,8 @@ function setNeuroMode(mode) {
     const colorImg = obj.photo_restored || obj.photo_original || '';
     const bwImg = obj.photo_original || obj.photo_restored || '';
     card.innerHTML = `
-      <img class="ngc-color" src="${colorImg}" alt="${obj.title || ''}" onerror="this.src='assets/photos/placeholder.jpg'" />
-      <img class="ngc-bw" src="${bwImg}" alt="" onerror="this.src='assets/photos/placeholder.jpg'" />
+      <img class="ngc-color" src="${colorImg}" alt="${obj.title || ''}" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
+      <img class="ngc-bw" src="${bwImg}" alt="" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
       <div class="gallery-card-overlay" style="z-index:2;">
         <div class="gallery-card-title">${obj.title || ''}</div>
         <div class="gallery-card-year">${obj.year || ''}</div>
@@ -842,7 +843,7 @@ function setNeuroMode(mode) {
       const card = document.createElement('div');
       card.className = 'gallery-card';
       card.innerHTML = `
-        <img src="${obj.poster_url || ''}" alt="${obj.title}" onerror="this.src='assets/photos/placeholder.jpg'" />
+        <img src="${obj.poster_url || ''}" alt="${obj.title}" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
         <span class="badge model3d">3D</span>
         <div class="gallery-card-overlay">
           <div class="gallery-card-title">${obj.title}</div>
@@ -1515,7 +1516,8 @@ function toggleMobileSidebar() {
   // ── THEME ───────────────────────────────────
   function toggleTheme() {
     STATE.isDark = !STATE.isDark;
-    document.body.classList.toggle('dark', STATE.isDark);
+    document.documentElement.classList.toggle('dark', STATE.isDark);
+    localStorage.setItem('vmas-theme', STATE.isDark ? 'dark' : 'light');
 
     const wikiThemeIconMobile = $('wiki-theme-icon-mobile');
 if (wikiThemeIconMobile) {
@@ -1782,6 +1784,11 @@ document.addEventListener('webkitfullscreenchange', () => {
 
   // ── INIT ────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('vmas-theme');
+    if (savedTheme === 'dark' || (!savedTheme && matchMedia('(prefers-color-scheme: dark)').matches)) {
+      STATE.isDark = true;
+      document.documentElement.classList.add('dark');
+    }
     initEvents();
     initSplash();
     updateTabIndicator();
