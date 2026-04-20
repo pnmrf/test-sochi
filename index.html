@@ -182,16 +182,6 @@
     </section>
 
         <section id="screen-neuro" class="screen">
-      <header class="top-bar top-bar-neuro glass" id="neuro-topbar">
-        <button class="tb-btn" id="neuro-back" aria-label="Назад">
-          <span class="material-symbols-outlined">arrow_back</span>
-        </button>
-        <span class="tb-title" id="neuro-title-text">Нейрохроника</span>
-        <button class="tb-btn" id="neuro-close" aria-label="Закрыть">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </header>
-
       <div id="neuro-viewer" class="neuro-viewer">
         <div id="neuro-frame" class="neuro-frame">
           <img id="neuro-img-restored" class="neuro-img" src="" alt="" />
@@ -244,24 +234,25 @@
           <ul id="neuro-sidebar-list" class="ns-list"></ul>
         </div>
 
-        <div class="neuro-controls" id="neuro-controls">
-          <button class="nc-btn" id="neuro-btn-eye" aria-label="Режим просмотра">
-            <span class="material-symbols-outlined">visibility</span>
+      </nav>
+
+      <div class="neuro-controls" id="neuro-controls">
+        <button class="nc-btn" id="neuro-btn-eye" aria-label="Режим просмотра">
+          <span class="material-symbols-outlined">visibility</span>
+        </button>
+        <div class="neuro-nav-group" id="neuro-nav-group">
+          <button class="nc-nav-btn" id="neuro-prev" aria-label="Предыдущая">
+            <span class="material-symbols-outlined">chevron_left</span>
           </button>
-          <div class="neuro-nav-group" id="neuro-nav-group">
-            <button class="nc-nav-btn" id="neuro-prev" aria-label="Предыдущая">
-              <span class="material-symbols-outlined">chevron_left</span>
-            </button>
-            <span class="neuro-nav-counter" id="neuro-counter">1 / 1</span>
-            <button class="nc-nav-btn" id="neuro-next" aria-label="Следующая">
-              <span class="material-symbols-outlined">chevron_right</span>
-            </button>
-          </div>
-          <button class="nc-btn" id="neuro-btn-compare" data-mode="compare" aria-label="Сравнить до и после">
-            <span class="material-symbols-outlined">compare</span>
+          <span class="neuro-nav-counter" id="neuro-counter">1 / 1</span>
+          <button class="nc-nav-btn" id="neuro-next" aria-label="Следующая">
+            <span class="material-symbols-outlined">chevron_right</span>
           </button>
         </div>
-      </nav>
+        <button class="nc-btn" id="neuro-btn-compare" data-mode="compare" aria-label="Сравнить до и после">
+          <span class="material-symbols-outlined">compare</span>
+        </button>
+      </div>
 
       <div id="neuro-overlay" class="neuro-overlay hidden"></div>
     </section>

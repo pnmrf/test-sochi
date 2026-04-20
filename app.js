@@ -35,6 +35,7 @@
     neuroFrom: 'map',
     neuroIndex: 0,
     neuroCompareMode: false,
+    lastNeuro: null,
     wikiFrom: 'map',
     legendVisible: false,
     activeBottomSheet: null,
@@ -551,8 +552,7 @@
   function openNeuro(obj, from, preserveEyeMode = false, preserveCompare = false) {
     STATE.neuroFrom = from || 'map';
     STATE.currentObject = obj;
-
-    $('neuro-title-text').textContent = obj.title;
+    STATE.lastNeuro = obj;
 
     const imgEl = $('neuro-img-restored');
     imgEl.onload = null;
@@ -581,7 +581,9 @@
     } else {
       STATE.neuroCompareMode = false;
       hideBottomSheet();
-      document.querySelectorAll('.nc-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.nc-btn').forEach(b => {
+        if (!preserveEyeMode || b.id !== 'neuro-btn-eye') b.classList.remove('active');
+      });
       show($('neuro-img-restored'));
       hide($('neuro-compare'));
     }
@@ -589,8 +591,8 @@
     if (!preserveEyeMode) {
       $('neuro-controls').classList.remove('view-mode');
       $('neuro-btn-eye')?.classList.remove('active');
+      $('app').classList.remove('neuro-eye-mode');
     }
-    hide($('neuro-topbar'));
 
     const idx = STATE.neurochronicles.indexOf(obj);
     if (idx !== -1) STATE.neuroIndex = idx;
@@ -625,28 +627,21 @@ function toggleNeuroEyeMode() {
   const isEye = controls.classList.contains('view-mode');
 
   if (isEye) {
-    // Выходим из полноэкранного режима
     controls.classList.remove('view-mode');
+    $('screen-neuro')?.classList.remove('eye-mode');
+    $('app').classList.remove('neuro-eye-mode');
     if (eyeBtn) eyeBtn.classList.remove('active');
-
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    } else if (document.webkitFullscreenElement) {
-      document.webkitExitFullscreen();
-    }
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else if (document.webkitFullscreenElement) document.webkitExitFullscreen();
   } else {
-    // Входим в полноэкранный режим
     controls.classList.add('view-mode');
+    $('screen-neuro')?.classList.add('eye-mode');
+    $('app').classList.add('neuro-eye-mode');
     if (eyeBtn) eyeBtn.classList.add('active');
-
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) {
-      elem.requestFullscreen().catch(() => {});
-    } else if (elem.webkitRequestFullscreen) {
-      elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) {
-      elem.msRequestFullscreen();
-    }
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
   }
 }
 
@@ -1450,8 +1445,12 @@ function toggleMobileSidebar() {
         setTimeout(() => updateMarkerVisibility(), 320);
       }
     } else if (tab === 'neuro') {
-      renderNeuroGallery();
-      switchScreen('neuro-gallery');
+      if (STATE.lastNeuro) {
+        openNeuro(STATE.lastNeuro, 'neuro', false, false);
+      } else {
+        renderNeuroGallery();
+        switchScreen('neuro-gallery');
+      }
     } else if (tab === '3d') {
       renderGallery();
       switchScreen('3d-gallery');
@@ -1609,18 +1608,6 @@ if (wikiThemeBtn) {
       cb.addEventListener('change', filterMarkers);
     });
 
-    $('neuro-back').addEventListener('click', () => {
-      hideBottomSheet();
-      if (STATE.neuroFrom === 'wiki') switchTab('wiki');
-      else if (STATE.neuroFrom === 'neuro') switchTab('neuro');
-      else switchTab('map');
-    });
-
-    $('neuro-close').addEventListener('click', () => {
-      hideBottomSheet();
-      switchTab('map');
-    });
-
     $('neuro-btn-compare').addEventListener('click', (e) => { e.stopPropagation(); setNeuroMode('compare'); });
     $('neuro-prev').addEventListener('click', (e) => { e.stopPropagation(); navigateNeuro(-1); });
     $('neuro-next').addEventListener('click', (e) => { e.stopPropagation(); navigateNeuro(+1); });
@@ -1639,7 +1626,13 @@ if (wikiThemeBtn) {
     if (neuroSidebarClose) {
       neuroSidebarClose.addEventListener('click', (e) => {
         e.stopPropagation();
-        closeNeuroSidebar();
+        hideBottomSheet();
+        STATE.lastNeuro = null;
+        if (STATE.neuroFrom === 'wiki') switchTab('wiki');
+        else if (STATE.neuroFrom === 'neuro') {
+          renderNeuroGallery();
+          switchScreen('neuro-gallery');
+        } else switchTab('map');
       });
     }
 
@@ -1761,23 +1754,6 @@ if (articleArea) {
   }
 
   // В конец функции initEvents() добавить:
-document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement) {
-    const controls = $('neuro-controls');
-    const eyeBtn = $('neuro-btn-eye');
-    if (controls) controls.classList.remove('view-mode');
-    if (eyeBtn) eyeBtn.classList.remove('active');
-  }
-});
-
-document.addEventListener('webkitfullscreenchange', () => {
-  if (!document.webkitFullscreenElement) {
-    const controls = $('neuro-controls');
-    const eyeBtn = $('neuro-btn-eye');
-    if (controls) controls.classList.remove('view-mode');
-    if (eyeBtn) eyeBtn.classList.remove('active');
-  }
-});
 
   }
   

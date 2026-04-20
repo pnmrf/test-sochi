@@ -942,7 +942,13 @@ html.dark .tab-indicator {
 }
 
 #screen-neuro.eye-mode .neuro-viewer {
-  padding-bottom: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  z-index: 1049;
 }
 
 .neuro-frame {
@@ -1121,12 +1127,11 @@ html.dark .tab-indicator {
 }
 
 .neuro-controls {
-  position: relative;
-  bottom: auto;
-  left: auto;
-  transform: none;
-  flex-shrink: 0;
-  margin-top: auto;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 360px;
+  z-index: 1052;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1139,19 +1144,9 @@ html.dark .tab-indicator {
   -webkit-backdrop-filter: blur(12px);
   border-radius: 0;
   box-shadow: none;
-  width: 100%;
-  z-index: 1;
+  box-sizing: border-box;
 }
 
-/* Добавь эти два блока сразу после */
-.neuro-controls.view-mode {
-  opacity: 0.6;
-  transition: opacity 0.3s ease;
-}
-
-.neuro-controls.view-mode:hover {
-  opacity: 1;
-}
 
 .nc-btn {
   display: flex;
@@ -1222,20 +1217,27 @@ html.dark .nc-nav-btn.active:hover { background: var(--accent); }
 }
 
 /* Eye mode */
-.neuro-controls.eye-mode {
-  opacity: 0.65;
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
-.neuro-controls.eye-mode #neuro-btn-compare,
-.neuro-controls.eye-mode #neuro-btn-info,
-.neuro-controls.eye-mode .nc-sep {
+#screen-neuro.eye-mode .neuro-sidebar {
   display: none;
 }
 
-.neuro-controls.eye-mode .neuro-nav-counter {
-  color: var(--text);
+#screen-neuro.eye-mode .neuro-controls {
+  width: 360px;
+  bottom: 20px;
+  left: 20px;
+  border-radius: var(--radius-pill);
+  border-top: none;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+}
+
+
+#app.neuro-eye-mode .tab-bar {
+  display: none !important;
+}
+
+.neuro-controls.view-mode {
+  opacity: 0.65;
 }
 
 /* ── 10.1 NEURO SIDEBAR TOGGLE ── */
