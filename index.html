@@ -57,14 +57,14 @@
           <p id="sc-desc" class="sc-desc"></p>
 
           <div id="sc-architect-list" class="sc-architect-list"></div>
+        </div>
 
-          <div class="sc-actions">
-            <button id="sc-btn-open" class="btn-primary">Открыть</button>
-            <button id="sc-btn-wiki" class="btn-glass">
-              <span class="material-symbols-outlined">menu_book</span>
-              Вики
-            </button>
-          </div>
+        <div class="sc-actions">
+          <button id="sc-btn-wiki" class="btn-glass">
+            <span class="material-symbols-outlined">menu_book</span>
+            Подробнее
+          </button>
+          <button id="sc-btn-open" class="btn-primary">Открыть</button>
         </div>
       </aside>
 
@@ -201,6 +201,7 @@
             </div>
           </div>
         </div>
+        <div id="neuro-magnifier" class="neuro-magnifier hidden"></div>
       </div>
 
       <div id="neuro-info-sheet" class="bottom-sheet glass hidden">
@@ -218,20 +219,35 @@
       </button>
 
       <nav id="neuro-sidebar" class="neuro-sidebar glass">
-        <div class="ns-header glass">
-          <button id="neuro-sidebar-close" class="tb-btn ns-close-btn" aria-label="Закрыть меню">
-            <span class="material-symbols-outlined">chevron_left</span>
-          </button>
-          <span class="ns-logo">НЕЙРОХРОНИКИ</span>
-          <div style="width: 40px;"></div>
+        <div class="ws-header glass">
+          <div class="ws-header-actions ws-header-actions-left">
+            <button id="neuro-sidebar-close" class="tb-btn" aria-label="Закрыть меню">
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+          </div>
+          <div class="ws-header-main">
+            <span class="ws-logo">Нейрохроники</span>
+          </div>
+          <div class="ws-header-actions ws-header-actions-right">
+            <button class="tb-btn ws-theme-btn" id="neuro-theme" aria-label="Сменить тему">
+              <span class="material-symbols-outlined" id="neuro-theme-icon">dark_mode</span>
+            </button>
+          </div>
         </div>
 
         <div class="ns-info-section">
           <div id="neuro-sidebar-info" class="neuro-info-card"></div>
         </div>
 
-        <div class="ns-list-section">
-          <ul id="neuro-sidebar-list" class="ns-list"></ul>
+        <div class="ns-map-btn-wrap">
+          <button class="ns-map-btn glass" id="neuro-btn-gallery">
+            <span class="material-symbols-outlined">grid_view</span>
+            К списку
+          </button>
+          <button class="ns-map-btn glass" id="neuro-btn-map">
+            <span class="material-symbols-outlined">map</span>
+            Смотреть на карте
+          </button>
         </div>
 
       </nav>
@@ -239,6 +255,12 @@
       <div class="neuro-controls" id="neuro-controls">
         <button class="nc-btn" id="neuro-btn-eye" aria-label="Режим просмотра">
           <span class="material-symbols-outlined">visibility</span>
+        </button>
+        <button class="nc-btn" id="neuro-btn-magnify" aria-label="Лупа">
+          <span class="material-symbols-outlined">search</span>
+        </button>
+        <button class="nc-btn" id="neuro-btn-compare" data-mode="compare" aria-label="Сравнить до и после">
+          <span class="material-symbols-outlined">compare</span>
         </button>
         <div class="neuro-nav-group" id="neuro-nav-group">
           <button class="nc-nav-btn" id="neuro-prev" aria-label="Предыдущая">
@@ -249,9 +271,6 @@
             <span class="material-symbols-outlined">chevron_right</span>
           </button>
         </div>
-        <button class="nc-btn" id="neuro-btn-compare" data-mode="compare" aria-label="Сравнить до и после">
-          <span class="material-symbols-outlined">compare</span>
-        </button>
       </div>
 
       <div id="neuro-overlay" class="neuro-overlay hidden"></div>

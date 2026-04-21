@@ -634,7 +634,7 @@ html.dark .tab-indicator {
 }
 
 .sc-body {
-  padding: 20px 20px 24px;
+  padding: 20px 20px 16px;
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -678,6 +678,12 @@ html.dark .tab-indicator {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  flex-shrink: 0;
 }
 
 .sc-architect {
@@ -745,7 +751,15 @@ html.dark .tab-indicator {
 }
 
 .btn-glass:hover {
-  background: rgba(255,255,255,0.9);
+  background: rgba(128,128,128,0.14);
+}
+
+html.dark .btn-glass:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.sidebar-card .badge {
+  display: none;
 }
 
 /* Badge */
@@ -971,7 +985,7 @@ html.dark .tab-indicator {
 .neuro-compare {
   position: absolute;
   inset: 0;
-  cursor: ew-resize;
+  cursor: default;
   overflow: hidden;
 }
 
@@ -1240,6 +1254,24 @@ html.dark .nc-nav-btn.active:hover { background: var(--accent); }
   opacity: 0.65;
 }
 
+.neuro-frame.magnifying {
+  cursor: none;
+}
+
+.neuro-magnifier {
+  position: absolute;
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.55);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.18), 0 6px 24px rgba(0,0,0,0.45);
+  pointer-events: none;
+  z-index: 200;
+  transform: translate(-50%, -50%);
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
 /* ── 10.1 NEURO SIDEBAR TOGGLE ── */
 .neuro-sidebar-toggle {
   display: none;
@@ -1258,6 +1290,8 @@ html.dark .nc-nav-btn.active:hover { background: var(--accent); }
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-bottom: 68px;
+  box-sizing: border-box;
 }
 
 /* ── 10.3 SIDEBAR HEADER ── */
@@ -1293,14 +1327,41 @@ html.dark .nc-nav-btn.active:hover { background: var(--accent); }
 }
 
 .ns-info-section {
-  flex: 0 0 45%;
+  flex: 1;
   padding: 16px;
-  border-bottom: 1px solid var(--glass-border);
+  overflow-y: auto;
 }
 
-.ns-list-section {
-  flex: 1;
-  padding: 12px 8px;
+.ns-map-btn-wrap {
+  flex-shrink: 0;
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ns-map-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  transition: background var(--transition), color var(--transition);
+  box-sizing: border-box;
+}
+
+.ns-map-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 12px rgba(74,158,224,0.35);
 }
 
 /* ── 10.5 INFO CARD (в боковой панели) ── */
@@ -2495,6 +2556,7 @@ html.dark .wa-badges .badge.reconstructed {
   .tab-bar {
     max-width: 420px;
   }
+
 }
 
 /* ── 16. HOME SCREEN ── */

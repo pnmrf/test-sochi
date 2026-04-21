@@ -35,6 +35,7 @@
     neuroFrom: 'map',
     neuroIndex: 0,
     neuroCompareMode: false,
+    neuroMagnifyMode: false,
     lastNeuro: null,
     wikiFrom: 'map',
     legendVisible: false,
@@ -194,7 +195,7 @@
 
       STATE.map = new maplibregl.Map({
         container,
-        style: `https://api.maptiler.com/maps/dataviz-light/style.json?key=${CONFIG.mapTilerKey}`,
+        style: `https://api.maptiler.com/maps/${STATE.isDark ? 'dataviz-dark' : 'dataviz-light'}/style.json?key=${CONFIG.mapTilerKey}`,
         center: CONFIG.center,
         zoom: CONFIG.zoom,
         fadeDuration: 500,
@@ -582,7 +583,9 @@
       STATE.neuroCompareMode = false;
       hideBottomSheet();
       document.querySelectorAll('.nc-btn').forEach(b => {
-        if (!preserveEyeMode || b.id !== 'neuro-btn-eye') b.classList.remove('active');
+        if (b.id === 'neuro-btn-eye' && preserveEyeMode) return;
+        if (b.id === 'neuro-btn-magnify' && STATE.neuroMagnifyMode) return;
+        b.classList.remove('active');
       });
       show($('neuro-img-restored'));
       hide($('neuro-compare'));
@@ -600,6 +603,10 @@
 
     // Обновить боковую панель
     updateNeuroSidebar();
+
+    STATE.activeTab = 'neuro';
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'neuro'));
+    updateTabIndicator();
 
     switchScreen('neuro');
 
@@ -620,6 +627,71 @@
     const isEyeMode = $('neuro-controls').classList.contains('view-mode');
     openNeuro(items[STATE.neuroIndex], STATE.neuroFrom, isEyeMode, STATE.neuroCompareMode);
   }
+
+function toggleNeuroMagnify() {
+  const btn = $('neuro-btn-magnify');
+  if (!btn) return;
+  const isActive = btn.classList.contains('active');
+  btn.classList.toggle('active', !isActive);
+  STATE.neuroMagnifyMode = !isActive;
+  if (isActive) {
+    hide($('neuro-magnifier'));
+    $('neuro-frame').classList.remove('magnifying');
+  }
+}
+
+function handleNeuroMagnify(e) {
+  if (!STATE.neuroMagnifyMode) return;
+  const frame = $('neuro-frame');
+  const viewer = $('neuro-viewer');
+  const mag = $('neuro-magnifier');
+  if (!frame || !viewer || !mag) return;
+
+  const frameRect = frame.getBoundingClientRect();
+  const viewerRect = viewer.getBoundingClientRect();
+
+  if (e.clientX < frameRect.left || e.clientX > frameRect.right ||
+      e.clientY < frameRect.top || e.clientY > frameRect.bottom) {
+    hide(mag);
+    frame.classList.remove('magnifying');
+    return;
+  }
+
+  show(mag);
+  frame.classList.add('magnifying');
+  mag.style.left = (e.clientX - viewerRect.left) + 'px';
+  mag.style.top = (e.clientY - viewerRect.top) + 'px';
+
+  let imgEl, useGrayscale = false;
+  if (STATE.neuroCompareMode) {
+    const divider = $('neuro-divider');
+    const compareEl = $('neuro-compare');
+    if (divider && compareEl) {
+      const compareRect = compareEl.getBoundingClientRect();
+      const dividerPct = parseFloat(divider.style.left) / 100 || 0.5;
+      const relX = (e.clientX - compareRect.left) / compareRect.width;
+      if (relX < dividerPct) { imgEl = $('neuro-img-bw'); useGrayscale = true; }
+      else imgEl = $('neuro-img-color');
+    }
+  } else {
+    imgEl = $('neuro-img-restored');
+  }
+
+  if (!imgEl || !imgEl.src) return;
+
+  const magSize = 230;
+  const bgW = frameRect.width * 2;
+  const bgH = frameRect.height * 2;
+  const cx = e.clientX - frameRect.left;
+  const cy = e.clientY - frameRect.top;
+  const bgX = cx * 2 - magSize / 2;
+  const bgY = cy * 2 - magSize / 2;
+
+  mag.style.backgroundImage = `url('${imgEl.src}')`;
+  mag.style.backgroundSize = `${bgW}px ${bgH}px`;
+  mag.style.backgroundPosition = `-${bgX}px -${bgY}px`;
+  mag.style.filter = useGrayscale ? 'grayscale(100%) sepia(10%)' : '';
+}
 
 function toggleNeuroEyeMode() {
   const controls = $('neuro-controls');
@@ -1538,6 +1610,11 @@ if (wikiThemeIcon) {
       viewerThemeIcon.textContent = STATE.isDark ? 'light_mode' : 'dark_mode';
     }
 
+    const neuroThemeIcon = $('neuro-theme-icon');
+    if (neuroThemeIcon) {
+      neuroThemeIcon.textContent = STATE.isDark ? 'light_mode' : 'dark_mode';
+    }
+
     const style = STATE.isDark
       ? `https://api.maptiler.com/maps/dataviz-dark/style.json?key=${CONFIG.mapTilerKey}`
       : `https://api.maptiler.com/maps/dataviz-light/style.json?key=${CONFIG.mapTilerKey}`;
@@ -1586,9 +1663,31 @@ if (wikiCollapseBtn) {
     });
 
     const wikiThemeBtn = $('wiki-theme');
-if (wikiThemeBtn) {
-  wikiThemeBtn.addEventListener('click', toggleTheme);
-}
+    if (wikiThemeBtn) wikiThemeBtn.addEventListener('click', toggleTheme);
+
+    const neuroThemeBtn = $('neuro-theme');
+    if (neuroThemeBtn) neuroThemeBtn.addEventListener('click', toggleTheme);
+
+    const neuroGalleryBtn = $('neuro-btn-gallery');
+    if (neuroGalleryBtn) {
+      neuroGalleryBtn.addEventListener('click', () => {
+        closeNeuroSidebar();
+        renderNeuroGallery();
+        switchScreen('neuro-gallery');
+      });
+    }
+
+    const neuroMapBtn = $('neuro-btn-map');
+    if (neuroMapBtn) {
+      neuroMapBtn.addEventListener('click', () => {
+        const obj = STATE.currentObject;
+        closeNeuroSidebar();
+        switchTab('map');
+        if (obj && obj.lat && obj.lng && STATE.map) {
+          STATE.map.flyTo({ center: [obj.lng, obj.lat], zoom: 16, duration: 1200 });
+        }
+      });
+    }
 
     $('btn-theme').addEventListener('click', toggleTheme);
 
@@ -1612,6 +1711,16 @@ if (wikiThemeBtn) {
     $('neuro-prev').addEventListener('click', (e) => { e.stopPropagation(); navigateNeuro(-1); });
     $('neuro-next').addEventListener('click', (e) => { e.stopPropagation(); navigateNeuro(+1); });
     $('neuro-btn-eye').addEventListener('click', toggleNeuroEyeMode);
+    $('neuro-btn-magnify').addEventListener('click', (e) => { e.stopPropagation(); toggleNeuroMagnify(); });
+
+    const neuroViewer = $('neuro-viewer');
+    if (neuroViewer) {
+      neuroViewer.addEventListener('mousemove', handleNeuroMagnify);
+      neuroViewer.addEventListener('mouseleave', () => {
+        hide($('neuro-magnifier'));
+        $('neuro-frame')?.classList.remove('magnifying');
+      });
+    }
 
     // ── NEURO SIDEBAR EVENT HANDLERS ──
     const neuroToggle = $('neuro-sidebar-toggle');
@@ -1761,11 +1870,20 @@ if (articleArea) {
   // ── INIT ────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('vmas-theme');
-    if (savedTheme === 'dark' || (!savedTheme && matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if (savedTheme !== 'light') {
       STATE.isDark = true;
       document.documentElement.classList.add('dark');
+      ['theme-icon', 'wiki-theme-icon', 'wiki-theme-icon-mobile', 'viewer-theme-icon', 'neuro-theme-icon'].forEach(id => {
+        const el = $(id);
+        if (el) el.textContent = 'light_mode';
+      });
     }
     initEvents();
+    if (window.innerWidth >= 1100) {
+      STATE.legendVisible = true;
+      $('legend-panel')?.classList.remove('hidden');
+      $('btn-legend-toggle')?.classList.add('active');
+    }
     initSplash();
     updateTabIndicator();
     updateTopBarTitle();
