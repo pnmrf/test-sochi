@@ -29,12 +29,13 @@
   --radius-md: 16px;
   --radius-sm: 12px;
 
-  --font: 'Tenor Sans', Georgia, serif;
+  --font-display: 'Unbounded', sans-serif;
+  --font-ui: 'Geist', sans-serif;
   --tb-h: 56px;
   --tab-h: 68px;
   --transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar-w: 360px;
-  --wiki-article-shift: calc(var(--sidebar-w) / -2 + 10px);
+  --wiki-article-shift: calc(var(--sidebar-w) / -2);
 
   --restored: #B45309;
   --restored-bg: rgba(245, 158, 11, 0.14);
@@ -62,13 +63,13 @@ html.dark {
 html, body {
   height: 100%;
   overflow: hidden;
-  font-family: var(--font);
+  font-family: var(--font-ui);
   background: var(--bg);
   color: var(--text);
 }
 
 button {
-  font-family: var(--font);
+  font-family: var(--font-ui);
   cursor: pointer;
   border: none;
   background: none;
@@ -85,7 +86,22 @@ a {
 }
 
 input {
-  font-family: var(--font);
+  font-family: var(--font-ui);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  word-break: break-word;
+}
+
+.splash-title,
+.home-title, .home-section-title, .home-how-title,
+.sc-title, .mc-title, .bs-title,
+.gallery-card-title,
+.neuro-eye-title, .neuro-eye-year,
+.gallery-card-year, .as-title {
+  font-family: var(--font-display);
+  word-break: break-word;
 }
 
 /* ── 3. GLASSMORPHISM UTILITY ── */
@@ -224,6 +240,22 @@ input {
   pointer-events: auto;
 }
 
+.tb-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 6px;
+  cursor: pointer;
+  pointer-events: auto;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: opacity var(--transition);
+}
+
+.tb-logo:hover {
+  opacity: 1;
+}
+
 .tb-btn {
   width: 44px;
   height: 44px;
@@ -240,6 +272,8 @@ input {
 }
 
 .tb-title {
+  font-family: var(--font-display);
+  word-break: break-word;
   font-size: 1.05rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -375,6 +409,26 @@ html.dark .tab-indicator {
   border: 2px solid rgba(255,255,255,0.8);
   box-shadow: 0 2px 8px rgba(0,0,0,0.25);
   cursor: pointer;
+}
+
+/* Пульсация выбранной точки (через box-shadow, чтобы не ломать transform MapLibre) */
+.map-marker.selected {
+  animation: marker-dot-pulse 3s ease-in-out infinite;
+}
+
+@keyframes marker-dot-pulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.25), 0 0 0 0px var(--dot-glow, rgba(107,114,128,0)); }
+  50%       { box-shadow: 0 2px 8px rgba(0,0,0,0.25), 0 0 0 8px var(--dot-glow, rgba(107,114,128,0.35)); }
+}
+
+/* Пульсация обводки превью */
+.marker-preview.selected {
+  animation: marker-preview-pulse 3s ease-in-out infinite;
+}
+
+@keyframes marker-preview-pulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 0 2px var(--preview-color, #4A9EE0); }
+  50%       { box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 0 8px var(--preview-color, #4A9EE0); }
 }
 
 .map-marker:hover {
@@ -718,7 +772,7 @@ html.dark .tab-indicator {
   font-size: 10px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  font-family: var(--font);
+  font-family: var(--font-ui);
   box-shadow: 0 4px 14px rgba(74,158,224,0.35);
   transition: filter var(--transition), transform var(--transition);
 }
@@ -746,7 +800,7 @@ html.dark .tab-indicator {
   font-size: 10px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  font-family: var(--font);
+  font-family: var(--font-ui);
   transition: background var(--transition);
 }
 
@@ -1231,6 +1285,36 @@ html.dark .nc-nav-btn.active:hover { background: var(--accent); }
 }
 
 /* Eye mode */
+.neuro-eye-label {
+  display: none;
+  position: fixed;
+  left: 28px;
+  top: 28px;
+  z-index: 1052;
+  pointer-events: none;
+  max-width: 420px;
+}
+
+#screen-neuro.eye-mode .neuro-eye-label {
+  display: block;
+}
+
+.neuro-eye-title {
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 500;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.65);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.neuro-eye-year {
+  color: rgba(255,255,255,0.72);
+  font-size: 16px;
+  font-style: italic;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.65);
+}
+
 #screen-neuro.eye-mode .neuro-sidebar {
   display: none;
 }
@@ -2223,6 +2307,9 @@ html.dark .vn-btn:hover {
   .wiki-article {
     transform: translateX(var(--wiki-article-shift));
   }
+  .wiki-placeholder {
+    transform: translateX(var(--wiki-article-shift));
+  }
 }
 
 .wa-hero {
@@ -2289,6 +2376,7 @@ html.dark .wa-badges .badge.reconstructed {
 .wa-body h1,
 .wa-body h2,
 .wa-body h3 {
+  font-family: var(--font-ui);
   color: var(--text);
   font-size: 1.35rem;
   letter-spacing: 0.01em;

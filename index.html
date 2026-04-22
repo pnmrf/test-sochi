@@ -10,7 +10,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Tenor+Sans&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Unbounded:wght@400;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
 
   <link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet" />
@@ -34,9 +34,7 @@
   <div id="app" class="hidden">
 
     <header class="top-bar glass" id="top-bar">
-      <button class="tb-btn" id="btn-home" aria-label="На главную">
-        <span class="material-symbols-outlined">museum</span>
-      </button>
+      <img src="assets/logo.png" class="tb-logo" alt="ВМАС" id="btn-home" title="На главную" onerror="this.style.display='none'" />
       <span class="tb-title" id="top-bar-title">ВМАС</span>
       <button class="tb-btn" id="btn-theme" aria-label="Сменить тему">
         <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
@@ -69,6 +67,9 @@
       </aside>
 
       <div class="map-controls">
+        <button class="mc-btn" id="btn-reset-view" aria-label="Вернуться к начальной позиции">
+          <span class="material-symbols-outlined">home</span>
+        </button>
         <button class="mc-btn" id="btn-compass" aria-label="Компас / 3D">
           <span class="material-symbols-outlined">explore</span>
         </button>
@@ -242,7 +243,7 @@
         <div class="ns-map-btn-wrap">
           <button class="ns-map-btn glass" id="neuro-btn-gallery">
             <span class="material-symbols-outlined">grid_view</span>
-            К списку
+            В галерею
           </button>
           <button class="ns-map-btn glass" id="neuro-btn-map">
             <span class="material-symbols-outlined">map</span>
@@ -251,6 +252,11 @@
         </div>
 
       </nav>
+
+      <div class="neuro-eye-label" id="neuro-eye-label">
+        <div class="neuro-eye-title" id="neuro-eye-title"></div>
+        <div class="neuro-eye-year" id="neuro-eye-year"></div>
+      </div>
 
       <div class="neuro-controls" id="neuro-controls">
         <button class="nc-btn" id="neuro-btn-eye" aria-label="Режим просмотра">

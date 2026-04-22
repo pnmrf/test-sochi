@@ -8,9 +8,9 @@
 
 | Зависимость | Версия | Назначение |
 |---|---|---|
-| MapLibre GL | 4.1.2 | Интерактивная карта |
+| MapLibre GL | 4.1.2 | Интерактивная карта с эффектами 3D |
 | Google Model Viewer | latest | 3D-просмотрщик + AR |
-| Marked.js | latest | Рендеринг Markdown |
+| Marked.js | latest | Рендеринг Markdown в вики |
 | Material Symbols Outlined | — | Иконки (Google Fonts) |
 | Tenor Sans | — | Шрифт (Google Fonts) |
 
@@ -20,18 +20,18 @@
 
 ```
 vmas/
-├── index.html              # Вся HTML-разметка, 1 файл
-├── app.js                  # Весь JS, 1 файл (~1550 строк)
-├── style.css               # Вся стилизация, 1 файл (~2200 строк)
+├── index.html              # Вся HTML-разметка (597 строк)
+├── app.js                  # Весь JS (1945 строк)
+├── style.css               # Вся стилизация (2856 строк)
 ├── manifest.json           # PWA-манифест
 ├── data/
-│   ├── objects.json        # Здания, скульптуры, 3D-объекты
-│   ├── architects.json     # Архитекторы
-│   ├── neurochronicles.json # Нейрохроники
-│   └── wiki/              # Markdown-статьи (slug.md)
+│   ├── objects.json        # Здания, скульптуры, 3D-объекты (6 объектов)
+│   ├── architects.json     # Архитекторы (3 записи)
+│   ├── neurochronicles.json # Нейрохроники (3 хроники)
+│   └── wiki/              # Markdown-статьи (8 статей)
 └── assets/
-    ├── models/            # 3D-модели (.glb)
-    ├── photos/            # Фото объектов, архитекторов, нейрохроник
+    ├── models/            # 3D-модели (.glb) — 2 модели
+    ├── photos/            # Фото объектов, архитекторов, нейрохроник (~20 файлов)
     └── icons/             # PWA-иконки
 ```
 
@@ -61,24 +61,48 @@ npx serve .
 
 ```js
 const CONFIG = {
-  mapTilerKey: '...',   // API-ключ MapTiler
-  center: [39.72, 43.5845],  // Центр карты (Сочи)
+  mapTilerKey: '...',       // API-ключ MapTiler
+  center: [39.7200, 43.5845], // Центр карты (Сочи)
   zoom: 14,
-  pitch3d: 50,
-  previewZoomIn: 14.5,  // Порог переключения маркеров в preview-режим
-  splashDuration: 2000,
+  bearing: 0,               // Поворот карты (0-360°)
+  pitch: 0,                 // Наклон карты 2D (0-60°)
+  pitch3d: 50,              // Наклон для 3D-режима
+  previewZoomIn: 14.5,      // Порог переключения маркеров в preview-режим
+  previewZoomOut: 14.35,    // Порог выключения preview-режима
+  splashDuration: 2000,     // Длительность splash-экрана (мс)
 };
 
 const STATE = {
-  map: null,            // Экземпляр MapLibre
-  objects: [],          // Загруженные объекты
-  architects: [],
-  neurochronicles: [],
-  mapItems: [],         // objects + neurochronicles (все на карте)
-  currentObject: null,
-  activeTab: 'map',     // 'home' | 'map' | 'wiki' | '3d'
-  isDark: false,
-  // ...
+  map: null,                // Экземпляр MapLibre GL
+  markers: [],              // Спрайты маркеров на карте
+  userMarker: null,         // Маркер текущей геолокации
+  watchId: null,            // ID для Geolocation API watch
+  
+  objects: [],              // Загруженные объекты (здания, скульптуры, 3D)
+  architects: [],           // Загруженные архитекторы
+  neurochronicles: [],      // Загруженные нейрохроники
+  mapItems: [],             // Единый список всего на карте (объекты + нейрохроники)
+  
+  currentObject: null,      // Текущий выбранный объект
+  currentViewer3d: null,    // Текущая 3D-модель в просмотрщике
+  viewer3dIndex: 0,         // Индекс в галерее 3D
+  viewer3dFrom: '3d',       // откуда открыли 3D ('3d' или 'map')
+  
+  neuroFrom: 'map',         // Откуда открыли нейрохронику ('map' или '3d-gallery')
+  neuroIndex: 0,            // Индекс в галерее нейрохроник
+  neuroCompareMode: false,  // Режим сравнения оригинала/реставрации
+  neuroMagnifyMode: false,  // Режим лупы для нейрохроник
+  lastNeuro: null,          // Последняя открытая нейрохроника
+  
+  wikiFrom: 'map',          // Откуда открыли вики-статью
+  
+  activeTab: 'map',         // Активная вкладка ('home' | 'map' | 'wiki' | '3d')
+  activeBottomSheet: null,  // Открытая bottom-sheet панель
+  legendVisible: false,     // Видна ли легенда на карте
+  markerPreviewMode: false, // Preview-режим маркеров при приближении
+  mapReady: false,          // Карта инициализирована
+  isDark: false,            // Активна ли тёмная тема
+  is3d: false,              // Карта в режиме 3D (pitch > 0)
 };
 ```
 
@@ -117,11 +141,19 @@ const STATE = {
 | `$(id)` | `document.getElementById(id)` |
 | `show(el)` / `hide(el)` | toggle класса `hidden` |
 | `typeColor(type)` | цвет маркера по типу объекта |
-| `typeBadgeLabel(type)` | русское название типа |
-| `statusLabel(status)` | русское название статуса |
-| `getAuthors(item)` | массив архитекторов объекта |
+| `typeBadgeLabel(type)` | русское название типа (Здание, 3D, Нейрохроника, Скульптура) |
+| `statusLabel(status)` | русское название статуса (Существует, Утрачен, Реставрирован, Реконструирован) |
+| `findArchitect(id)` | поиск архитектора по ID |
+| `getAuthorIds(item)` | получить ID авторов объекта (поддерживает `author_ids` и `architect_id`) |
+| `getAuthors(item)` | получить объекты архитекторов для элемента |
+| `hexToRgba(hex, a)` | преобразование hex-цвета в rgba |
+| `getPrimaryImage(item)` | получить главное фото объекта или нейрохроники |
+| `getItemYear(item)` | получить год (поддерживает `year_built` и `year`) |
+| `getItemMeta(item)` | получить метаданные для отображения (год, автор, стиль) |
 | `loadMarkdown(slug)` | загружает `data/wiki/{slug}.md` |
 | `updateHomeStats()` | обновляет счётчики на home-экране |
+| `updateTabIndicator()` | обновляет позицию индикатора активной вкладки |
+| `updateTopBarTitle(tab)` | обновляет заголовок в top bar в зависимости от вкладки |
 
 ---
 
@@ -132,27 +164,35 @@ const STATE = {
 | Поле | Тип | Описание |
 |---|---|---|
 | `id` | string | Уникальный ID |
-| `type` | `'3d'` \| `'building'` \| `'sculpture'` | Тип |
+| `type` | `'3d'` \| `'building'` \| `'sculpture'` | Тип объекта |
 | `title` | string | Название |
-| `short_desc` | string | Краткое описание |
-| `lat`, `lng` | number | Координаты |
+| `short_desc` | string | Краткое описание (используется как фоллбэк если wiki-статья отсутствует) |
+| `lat`, `lng` | number | Координаты на карте |
 | `year_built` | string | Год постройки |
 | `author_ids` | string[] | ID архитекторов из `architects.json` |
-| `style` | string \| null | Архитектурный стиль |
-| `status` | `'exists'` \| `'gone'` \| `'restored'` \| `'reconstructed'` | Состояние |
-| `model_url` | string \| null | Путь к `.glb` (только для type `'3d'`) |
-| `poster_url` | string | Главное фото |
-| `wiki_slug` | string | Имя файла статьи без `.md` |
-| `gallery` | string[] | Массив путей к фотографиям |
+| `style` | string \| null | Архитектурный стиль (Советский модернизм, Сталинский ампир и т.д.) |
+| `status` | `'exists'` \| `'gone'` \| `'restored'` \| `'reconstructed'` | Состояние объекта |
+| `model_url` | string \| null | Путь к `.glb`-файлу (только для type `'3d'`) |
+| `poster_url` | string | Главное фото для карточки объекта |
+| `wiki_slug` | string | Slug статьи в `data/wiki/` (без расширения `.md`) |
+| `gallery` | string[] | Массив путей к фотографиям галереи |
+| `chronicle_ids` | string[] | ID связанных нейрохроник из `neurochronicles.json` |
 
 ### Нейрохроники (`neurochronicles.json`)
 
-| Поле | Описание |
-|---|---|
-| `photo_original` | ЧБ оригинал (путь) |
-| `photo_restored` | AI-реставрация (путь) |
-| `source_url` / `source_label` | Источник фотографии |
-| `wiki_slug` | Статья в вики |
+| Поле | Тип | Описание |
+|---|---|---|
+| `id` | string | Уникальный ID |
+| `title` | string | Название нейрохроники |
+| `short_desc` | string | Краткое описание |
+| `lat`, `lng` | number | Координаты на карте |
+| `year` | string | Год фотографии |
+| `status` | `'exists'` \| `'gone'` | Состояние объекта на момент съёмки |
+| `photo_original` | string | ЧБ оригинал (путь) |
+| `photo_restored` | string | AI-реставрация/цветизированное фото (путь) |
+| `source_url` / `source_label` | string | Источник фотографии (ссылка + текст) |
+| `wiki_slug` | string | Slug статьи в вики |
+| `object_ids` | string[] | ID связанных объектов из `objects.json` |
 
 ### Архитекторы (`architects.json`)
 
@@ -239,6 +279,12 @@ const STATE = {
 - **API-ключ MapTiler** хардкоден в `CONFIG.mapTilerKey`. Перед публикацией ограничить по домену в панели MapTiler.
 - **Порядок вкладок** в таббаре: Главная → Карта → Вики → 3D. При изменении количества вкладок — обновить `width: calc((100% - 16px) / N)` для `.tab-indicator` в style.css.
 - **`updateTabIndicator()`** работает динамически (читает DOM), изменений в JS не требует при добавлении вкладок.
+- **`updateTopBarTitle()`** автоматически обновляет заголовок в top bar в зависимости от активной вкладки.
 - **Нет service worker** — PWA-манифест есть, офлайн-режим не реализован.
 - Экраны `3d-viewer` и `neuro` скрывают top bar и tab bar (полноэкранный режим).
+- **Легенда на карте** — открывается кнопкой `btn-legend-toggle`, отображает фильтры по типам объектов. На десктопе открывается автоматически.
+- **Геолокация** — кнопка `btn-geolocate` запрашивает разрешение и показывает текущую позицию на карте.
+- **3D-режим карты** — активируется при наклоне карты (pitch > 0) кнопкой компаса `btn-compass`.
+- **Preview-режим маркеров** — при приближении (zoom > 14.5) маркеры переключаются с простых точек на preview-карточки.
+- **Связь объектов и нейрохроник** — через `chronicle_ids` в объектах и `object_ids` в нейрохониках.
 - `STATE.mapItems = [...objects, ...neurochronicles]` — единый список всего, что есть на карте.

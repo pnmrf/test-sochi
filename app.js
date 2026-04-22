@@ -82,6 +82,13 @@
       .filter(Boolean);
   }
 
+  function hexToRgba(hex, a) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
   function getPrimaryImage(item) {
     return item.poster_url || item.photo_restored || '';
   }
@@ -478,6 +485,20 @@
       openFn = () => { STATE.neuroCompareMode = false; openNeuro(obj, 'map'); };
     }
 
+    // Анимация выбранного маркера
+    STATE.markers.forEach(m => {
+      m.dot.classList.remove('selected');
+      m.prev.classList.remove('selected');
+    });
+    const selectedEntry = STATE.markers.find(m => m.obj.id === obj.id);
+    if (selectedEntry) {
+      const color = typeColor(obj.type);
+      selectedEntry.dot.style.setProperty('--dot-glow', hexToRgba(color, 0.5));
+      selectedEntry.dot.classList.add('selected');
+      selectedEntry.prev.style.setProperty('--preview-color', color);
+      selectedEntry.prev.classList.add('selected');
+    }
+
     const sc = $('sidebar-card');
     if (sc) {
       $('sc-img').src = getPrimaryImage(obj);
@@ -547,6 +568,10 @@
     $('sidebar-card')?.classList.add('hidden');
     $('mobile-card')?.classList.add('hidden');
     STATE.currentObject = null;
+    STATE.markers.forEach(m => {
+      m.dot.classList.remove('selected');
+      m.prev.classList.remove('selected');
+    });
   }
 
   // ── NEURO ───────────────────────────────────
@@ -566,6 +591,11 @@
 
     $('neuro-info-title').textContent = obj.title;
     $('neuro-info-year').textContent = obj.year || '';
+
+    const eyeTitle = $('neuro-eye-title');
+    const eyeYear = $('neuro-eye-year');
+    if (eyeTitle) eyeTitle.textContent = obj.title || '';
+    if (eyeYear) eyeYear.textContent = obj.year || '';
     $('neuro-info-desc').textContent = obj.short_desc || '';
     $('neuro-info-source').textContent = obj.source_label ? `Источник: ${obj.source_label}` : '';
     $('neuro-info-source').href = obj.source_url || '#';
@@ -1662,6 +1692,17 @@ if (wikiCollapseBtn) {
       switchTab('home');
     });
 
+    $('btn-reset-view').addEventListener('click', () => {
+      if (!STATE.map) return;
+      STATE.map.flyTo({
+        center: CONFIG.center,
+        zoom: CONFIG.zoom,
+        pitch: CONFIG.pitch,
+        bearing: CONFIG.bearing,
+        duration: 900,
+      });
+    });
+
     const wikiThemeBtn = $('wiki-theme');
     if (wikiThemeBtn) wikiThemeBtn.addEventListener('click', toggleTheme);
 
@@ -1682,9 +1723,19 @@ if (wikiCollapseBtn) {
       neuroMapBtn.addEventListener('click', () => {
         const obj = STATE.currentObject;
         closeNeuroSidebar();
+
+        // Включить нейрохроники в легенде, если выключены
+        const neuroLayerToggle = document.querySelector('.legend-toggle[data-layer="neuro"]');
+        if (neuroLayerToggle && !neuroLayerToggle.checked) {
+          neuroLayerToggle.checked = true;
+          filterMarkers();
+        }
+
         switchTab('map');
         if (obj && obj.lat && obj.lng && STATE.map) {
           STATE.map.flyTo({ center: [obj.lng, obj.lat], zoom: 16, duration: 1200 });
+          // После завершения полёта — открыть карточку с анимацией маркера
+          setTimeout(() => openObjectCard(obj), 1300);
         }
       });
     }
@@ -1854,6 +1905,11 @@ if (articleArea) {
         } else if (!$('lightbox').classList.contains('hidden')) {
           hide($('lightbox'));
         }
+      }
+
+      if ($('screen-neuro')?.classList.contains('active')) {
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); navigateNeuro(-1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); navigateNeuro(+1); }
       }
     });
 
