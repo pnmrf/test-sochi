@@ -101,6 +101,17 @@
     return [getItemYear(item), item.style].filter(Boolean).join(' · ');
   }
 
+  function renderItemTags(containerId, item) {
+    const container = $(containerId);
+    if (!container) return;
+    const tags = [];
+    const year = getItemYear(item);
+    if (year) tags.push(year);
+    getAuthors(item).forEach(a => tags.push(a.name));
+    container.innerHTML = tags.map(t => `<span class="sc-tag">${t}</span>`).join('');
+    container.style.display = tags.length ? '' : 'none';
+  }
+
   function isNeuro(item) {
     return item.type === 'neuro';
   }
@@ -504,8 +515,8 @@
       $('sc-img').src = getPrimaryImage(obj);
       $('sc-badge').textContent = typeBadgeLabel(obj.type);
       $('sc-badge').className = `badge ${obj.type === '3d' ? 'model3d' : obj.type}`;
+      renderItemTags('sc-tags', obj);
       $('sc-title').textContent = obj.title;
-      $('sc-meta').textContent = getItemMeta(obj);
       $('sc-desc').textContent = obj.short_desc || '';
 
       $('sc-btn-open').innerHTML = `<span class="material-symbols-outlined">${primaryIcon}</span> ${primaryLabel}`;
@@ -517,8 +528,6 @@
       } else {
         hide($('sc-btn-wiki'));
       }
-
-      renderAuthorList('sc-architect-list', obj);
 
       sc.classList.remove('hidden');
     }
