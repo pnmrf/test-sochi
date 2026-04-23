@@ -163,6 +163,31 @@
     return authors.length ? authors.map(a => a.name).join(', ') : '—';
   }
 
+  // ── MODEL-VIEWER LAZY LOADER ────────────────
+  // model-viewer.min.js (277 КБ) не грузится при старте —
+  // только при первом открытии 3D-вьюера или галереи
+  let _modelViewerLoading = false;
+  let _modelViewerReady = false;
+  const _modelViewerCallbacks = [];
+
+  function loadModelViewer() {
+    return new Promise(resolve => {
+      if (_modelViewerReady) { resolve(); return; }
+      _modelViewerCallbacks.push(resolve);
+      if (_modelViewerLoading) return;
+      _modelViewerLoading = true;
+      const s = document.createElement('script');
+      s.type = 'module';
+      s.src = 'https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js';
+      s.onload = () => {
+        _modelViewerReady = true;
+        _modelViewerCallbacks.forEach(cb => cb());
+        _modelViewerCallbacks.length = 0;
+      };
+      document.head.appendChild(s);
+    });
+  }
+
   // ── SPLASH ──────────────────────────────────
   function initSplash() {
     const splash = $('splash');
@@ -992,8 +1017,8 @@ function setNeuroMode(mode) {
 
     STATE.viewer3dFrom = from || STATE.activeTab || '3d';
 
-    loadViewer3d(obj);
     switchScreen('3d-viewer');
+    loadModelViewer().then(() => loadViewer3d(obj));
   }
 
   function loadViewer3d(obj) {
@@ -1629,8 +1654,10 @@ function toggleMobileSidebar() {
         switchScreen('neuro-gallery');
       }
     } else if (tab === '3d') {
-      renderGallery();
-      switchScreen('3d-gallery');
+      loadModelViewer().then(() => {
+        renderGallery();
+        switchScreen('3d-gallery');
+      });
     } else if (tab === 'wiki') {
       switchScreen('wiki');
     } else if (tab === 'home') {

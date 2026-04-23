@@ -6,7 +6,9 @@
       "Bash(awk '{print $5, $9}')",
       "Bash(node -e \"require\\('sharp'\\); console.log\\('sharp ok'\\)\")",
       "Bash(npx --yes sharp-cli --version)",
-      "Bash(npx sharp-cli *)"
+      "Bash(npx sharp-cli *)",
+      "Bash(find \"D:/GitHub/vma-sochi/assets/models\" -name \"*.glb\" -exec ls -lh {} \\\\;)",
+      "Bash(npx gltf-pipeline *)"
     ]
   }
 }
