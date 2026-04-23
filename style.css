@@ -28,7 +28,7 @@
   --radius-md: 16px;
   --radius-sm: 12px;
 
-  --font-display: 'Unbounded', sans-serif;
+  --font-display: 'Tenor Sans', sans-serif;
   --font-ui: 'Geist', sans-serif;
   --tb-h: 56px;
   --tab-h: 68px;
@@ -92,6 +92,7 @@ input {
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
+  font-weight: 400;
   word-break: break-word;
 }
 
@@ -102,6 +103,7 @@ h1, h2, h3, h4 {
 .neuro-eye-title, .neuro-eye-year,
 .gallery-card-year, .as-title {
   font-family: var(--font-display);
+  font-weight: 400;
   word-break: break-word;
 }
 
@@ -299,7 +301,7 @@ html.dark .glass {
 
 .top-bar-neuro,
 .top-bar-viewer {
-  max-width: calc(100% - 32px);
+  max-width: 520px;
 }
 
 @media (min-width: 768px) {
@@ -313,8 +315,8 @@ html.dark .glass {
   .top-bar-viewer,
   .top-bar-neuro {
     width: fit-content;
-    min-width: 420px;
-    max-width: min(900px, calc(100% - 32px));
+    min-width: 320px;
+    max-width: min(720px, calc(100% - 32px));
   }
 }
 
@@ -368,7 +370,7 @@ html.dark .tab-indicator {
   justify-content: center;
   gap: 2px;
   padding: 6px 0;
-  color: var(--text-muted);
+  color: var(--text);
   border-radius: var(--radius-pill);
   transition: color var(--transition), background var(--transition);
 }
@@ -474,30 +476,48 @@ html.dark .tab-indicator {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
+  padding: 6px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--glass-shadow);
+}
+
+html.dark .map-controls {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.30);
 }
 
 .mc-btn {
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-pill);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text);
   font-size: 20px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.13s ease;
+}
+
+.mc-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+html.dark .mc-btn:hover {
+  background: rgba(255, 255, 255, 0.10);
 }
 
 .mc-btn.active {
   color: var(--accent);
-  background: rgba(74,158,224,0.12);
-  border-color: rgba(74,158,224,0.28);
+  background: rgba(74, 158, 224, 0.12);
 }
 
 .mc-btn:active {
@@ -507,37 +527,19 @@ html.dark .tab-indicator {
 .mc-group {
   display: flex;
   flex-direction: column;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-}
-
-.mc-group .mc-btn {
-  background: none;
-  border: none;
-  box-shadow: none;
-  border-radius: 0;
-}
-
-html.dark .mc-btn {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-top: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  width: 44px;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  margin: 2px 0;
+  padding: 2px 0;
 }
 
 html.dark .mc-group {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-top: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-html.dark .mc-group .mc-btn {
-  border: none;
-  box-shadow: none;
+.mc-group .mc-btn {
+  border-radius: var(--radius-md);
 }
 
 .mc-divider {
@@ -546,10 +548,14 @@ html.dark .mc-group .mc-btn {
   margin: 0 8px;
 }
 
+html.dark .mc-divider {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 /* ── Legend ── */
 .legend-panel {
   position: absolute;
-  right: 16px;
+  right: 76px;
   bottom: calc(var(--tab-h) + 20px);
   left: auto;
   transform: none;
@@ -669,7 +675,7 @@ html.dark .legend-item:hover {
 
 @media (min-width: 768px) {
   .legend-panel {
-    right: 72px;
+    right: 82px;
     bottom: calc(var(--tab-h) + 16px);
     left: auto;
     transform: none;
@@ -716,7 +722,7 @@ html.dark .sidebar-card {
   aspect-ratio: 1 / 1;
   flex-shrink: 0;
   overflow: hidden;
-  background: var(--bg);
+  background: var(--surface);
 }
 
 html.dark .sc-image-wrap {
@@ -727,14 +733,15 @@ html.dark .sc-image-wrap {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  -webkit-mask-image: linear-gradient(to bottom, black 35%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 35%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
 }
 
 .sc-body {
   padding: 20px 20px 16px;
   flex: 1;
   overflow-y: auto;
+  background: var(--surface);
 }
 
 html.dark .sc-body {
@@ -1278,8 +1285,8 @@ html.dark .btn-glass:hover {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 12px 16px;
-  min-height: 54px;
+  padding: 0 16px;
+  height: var(--tb-h);
   border-top: 1px solid var(--glass-border);
   background: var(--glass-bg);
   backdrop-filter: blur(12px);
@@ -1875,58 +1882,60 @@ model-viewer {
 .viewer-bottom-bar {
   position: absolute;
   left: 50%;
-  bottom: 16px;
+  bottom: 12px;
   transform: translateX(-50%);
   z-index: 120;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  width: auto;
-  max-width: calc(100% - 32px);
-  min-height: 64px;
-  padding: 8px 12px;
+  gap: 0;
+  width: calc(100% - 32px);
+  max-width: 440px;
+  height: var(--tb-h);
+  padding: 0 8px;
   border-radius: var(--radius-pill);
 }
 
 .viewer-bottom-actions {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 0;
 }
 
 .viewer-nav-group {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding-left: 10px;
+  gap: 4px;
+  padding-left: 8px;
   margin-left: 2px;
   border-left: 1px solid var(--glass-border);
   flex-shrink: 0;
 }
 
 .va-btn {
-  width: 48px;
+  flex: 1;
   height: 44px;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text);
+  font-size: 22px;
   transition: background var(--transition), transform 0.15s ease, color var(--transition);
-  flex-shrink: 0;
 }
 
 .vn-btn {
-  min-width: 58px;
+  min-width: 46px;
   height: 44px;
-  padding: 0 16px;
-  border-radius: 12px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text);
+  font-size: 22px;
   transition: background var(--transition), transform 0.15s ease, color var(--transition);
   flex-shrink: 0;
 }
@@ -2031,35 +2040,36 @@ html.dark .vn-btn:hover {
 
 @media (max-width: 767px) {
   .viewer-bottom-bar {
-    bottom: calc(10px + env(safe-area-inset-bottom));
-    gap: 10px;
-    padding: 7px 10px;
-    max-width: calc(100% - 16px);
-    min-height: 60px;
+    bottom: 12px;
+    gap: 0;
+    padding: 0 8px;
+    width: calc(100% - 32px);
+    max-width: calc(100% - 32px);
+    height: var(--tb-h);
     border-radius: var(--radius-pill);
   }
 
   .viewer-bottom-actions {
-    gap: 4px;
+    gap: 0;
   }
 
   .viewer-nav-group {
-    gap: 6px;
+    gap: 4px;
     padding-left: 8px;
     margin-left: 2px;
   }
 
   .va-btn {
-    width: 46px;
+    flex: 1;
     height: 42px;
-    border-radius: 11px;
+    border-radius: var(--radius-pill);
   }
 
   .vn-btn {
-    min-width: 54px;
+    min-width: 40px;
     height: 42px;
-    padding: 0 14px;
-    border-radius: 11px;
+    padding: 0 10px;
+    border-radius: var(--radius-pill);
   }
 }
 
@@ -2098,6 +2108,8 @@ html.dark .vn-btn:hover {
 .wiki-toggle-title {
   flex: 1;
   text-align: center;
+  font-family: var(--font-display);
+  font-weight: 400;
   font-size: 13px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -2140,7 +2152,6 @@ html.dark .vn-btn:hover {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--glass-border);
   overflow: hidden;
   z-index: 100;
   transition: transform var(--transition);
@@ -2151,8 +2162,9 @@ html.dark .vn-btn:hover {
   grid-template-columns: 40px 1fr 40px;
   align-items: center;
   gap: 12px;
-  margin: 14px 14px 10px;
-  padding: 10px 14px;
+  height: var(--tb-h);
+  margin: 12px 14px 10px;
+  padding: 8px 14px;
   border-radius: var(--radius-pill);
   flex-shrink: 0;
 }
@@ -2165,6 +2177,7 @@ html.dark .vn-btn:hover {
 }
 
 .ws-logo {
+  font-family: var(--font-display);
   font-size: 1rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -2217,7 +2230,7 @@ html.dark .vn-btn:hover {
 .ws-search {
   width: 100%;
   padding: 9px 12px 9px 36px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   background: rgba(0,0,0,0.06);
   border: 1px solid var(--glass-border);
   color: var(--text);
@@ -2270,7 +2283,7 @@ html.dark .vn-btn:hover {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 12px 39px 12px 16px;
   font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -2301,7 +2314,11 @@ html.dark .vn-btn:hover {
 
 .ws-list {
   list-style: none;
-  display: none;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  /* transition применяется при ЗАКРЫТИИ */
+  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
 }
 
 .ws-link-title {
@@ -2320,7 +2337,10 @@ html.dark .vn-btn:hover {
 }
 
 .ws-section.open .ws-list {
-  display: block;
+  max-height: 400px;
+  opacity: 1;
+  /* transition применяется при ОТКРЫТИИ */
+  transition: max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.12s ease;
 }
 
 .ws-list li a {
@@ -2349,6 +2369,25 @@ html.dark .vn-btn:hover {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: var(--tab-h);
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-light) transparent;
+}
+
+.wiki-article-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.wiki-article-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.wiki-article-area::-webkit-scrollbar-thumb {
+  background: var(--text-light);
+  border-radius: var(--radius-pill);
+}
+
+.wiki-article-area::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 .wiki-placeholder {
@@ -2482,6 +2521,18 @@ html.dark .wa-badges .badge.reconstructed {
   width: 100%;
   min-width: 0;
   padding: 14px 22px;
+  background: rgba(0,0,0,0.07);
+  color: var(--text-muted);
+  box-shadow: none;
+  transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+.wa-map-btn:hover,
+.wa-view-btn:hover {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(74,158,224,0.35);
+  filter: none;
 }
 
 .wiki-inline-object-link {
@@ -2588,9 +2639,15 @@ html.dark .wa-badges .badge.reconstructed {
   }
 
   .wiki-sidebar {
-    position: relative;
+    position: absolute;
+    top: 24px;
+    bottom: 12px;
+    left: 12px;
+    height: auto;
     transform: none !important;
-    border-radius: 0;
+    border-radius: var(--radius-lg);
+    border-right: none;
+    box-shadow: var(--glass-shadow);
   }
 
   .wiki-overlay {
@@ -2606,6 +2663,8 @@ html.dark .wa-badges .badge.reconstructed {
 
   .wiki-article-area {
     padding-top: 0;
+    padding-left: calc(var(--sidebar-w) + 24px);
+    scrollbar-gutter: stable;
   }
 }
 
