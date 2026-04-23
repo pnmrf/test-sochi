@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(find \"D:/GitHub/vma-sochi/assets\" -type f \\\\\\( -name \"*.jpg\" -o -name \"*.png\" \\\\\\) -exec ls -lh {} \\\\;)",
+      "Bash(awk '{print $5, $9}')",
+      "Bash(node -e \"require\\('sharp'\\); console.log\\('sharp ok'\\)\")",
+      "Bash(npx --yes sharp-cli --version)",
+      "Bash(npx sharp-cli *)"
     ]
   }
 }

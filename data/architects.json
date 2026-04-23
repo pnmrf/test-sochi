@@ -5,7 +5,7 @@
     "years": "1920–1987",
     "bio": "Советский архитектор, работавший в Сочи в период расцвета советского модернизма. Автор кинотеатра «Спутник» — одного из символов космической эпохи в архитектуре города.",
     "wiki_slug": "serdyukov",
-    "photo": "assets/photos/architect-serdyukov.jpg"
+    "photo": "assets/photos/architect-serdyukov.webp"
   },
   {
     "id": "kalmykov",
@@ -13,7 +13,7 @@
     "years": "1910–1975",
     "bio": "Архитектор, спроектировавший кинотеатр «Родина» в духе сталинского неоклассицизма. Его работы отличались монументальностью и вниманием к деталям фасадов.",
     "wiki_slug": "kalmykov",
-    "photo": "assets/photos/architect-kalmykov.jpg"
+    "photo": "assets/photos/architect-kalmykov.webp"
   },
   {
     "id": "alabyan",
@@ -21,6 +21,6 @@
     "years": "1897–1959",
     "bio": "Выдающийся советский архитектор, один из авторов Морского вокзала Сочи. Лауреат Сталинской премии, участник проектирования крупнейших объектов советского периода.",
     "wiki_slug": "alabyan",
-    "photo": "assets/photos/architect-alabyan.jpg"
+    "photo": "assets/photos/architect-alabyan.webp"
   }
 ]

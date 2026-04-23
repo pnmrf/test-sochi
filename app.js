@@ -936,8 +936,8 @@ function setNeuroMode(mode) {
     const colorImg = obj.photo_restored || obj.photo_original || '';
     const bwImg = obj.photo_original || obj.photo_restored || '';
     card.innerHTML = `
-      <img class="ngc-color" src="${colorImg}" alt="${obj.title || ''}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
-      <img class="ngc-bw" src="${bwImg}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
+      <img class="ngc-color" src="${colorImg}" alt="${obj.title || ''}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/photos/placeholder.webp'" />
+      <img class="ngc-bw" src="${bwImg}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/photos/placeholder.webp'" />
       <div class="gallery-card-overlay" style="z-index:2;">
         <div class="gallery-card-title">${obj.title || ''}</div>
         <div class="gallery-card-year">${obj.year || ''}</div>
@@ -964,7 +964,7 @@ function setNeuroMode(mode) {
       const card = document.createElement('div');
       card.className = 'gallery-card';
       card.innerHTML = `
-        <img src="${obj.poster_url || ''}" alt="${obj.title}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
+        <img src="${obj.poster_url || ''}" alt="${obj.title}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/photos/placeholder.webp'" />
         <span class="badge model3d">3D</span>
         <div class="gallery-card-overlay">
           <div class="gallery-card-title">${obj.title}</div>
