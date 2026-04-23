@@ -399,7 +399,7 @@
 
   <div class="ws-header-actions ws-header-actions-right">
     <button id="wiki-collapse-all" class="tb-btn ws-collapse-btn" aria-label="Свернуть разделы">
-      <span class="material-symbols-outlined">unfold_less</span>
+      <span class="material-symbols-outlined" id="wiki-collapse-icon">unfold_less</span>
     </button>
   </div>
 </div>
@@ -448,6 +448,19 @@
     </div>
   </div>
 </nav>
+
+      <div id="wiki-filter-bar" class="wiki-filter-bar glass">
+        <button class="wf-btn active" id="wf-lost" title="Утраченные">
+          <span class="ws-status-dot wf-dot"></span>
+          <span class="wf-label">Утраченные</span>
+        </button>
+        <button class="wf-btn active" id="wf-3d" title="3D объекты">
+          <span class="wf-label">3D</span>
+        </button>
+        <button class="wf-btn active" id="wf-neuro" title="С нейрохрониками">
+          <span class="material-symbols-outlined wf-icon">auto_fix_high</span>
+        </button>
+      </div>
 
       <div id="wiki-article-area" class="wiki-article-area">
         <div id="wiki-placeholder" class="wiki-placeholder">

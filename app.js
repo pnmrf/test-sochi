@@ -1196,36 +1196,83 @@ function hideBottomSheet() {
   }
 
   // ── WIKI ────────────────────────────────────
+  const wikiFilters = { lost: true, d3: true, neuro: true };
+
+  function updateCollapseIcon() {
+    const icon = $('wiki-collapse-icon');
+    if (!icon) return;
+    const anyOpen = !!document.querySelector('.ws-section.open');
+    icon.textContent = anyOpen ? 'unfold_less' : 'unfold_more';
+  }
+
+  function applyWikiFilters() {
+    document.querySelectorAll('.ws-list li').forEach(li => {
+      const a = li.querySelector('a');
+      if (!a) return;
+      const isGone   = a.dataset.gone === '1';
+      const is3d     = a.dataset.d3 === '1';
+      const hasNeuro = a.dataset.neuro === '1';
+
+      let visible = true;
+      if (isGone   && !wikiFilters.lost)  visible = false;
+      if (is3d     && !wikiFilters.d3)    visible = false;
+      if (hasNeuro && !wikiFilters.neuro) visible = false;
+
+      li.style.display = visible ? '' : 'none';
+    });
+  }
+
   function initWikiNav() {
     const buildingItems = STATE.objects.filter(o => ['building', '3d'].includes(o.type));
     const neuroItems = STATE.neurochronicles;
     const sculptureItems = STATE.objects.filter(o => o.type === 'sculpture');
 
-    fillWikiList('ws-list-buildings', buildingItems, o => o.wiki_slug, o => o.title, o => o.status);
-    fillWikiList('ws-list-neuro', neuroItems, o => o.wiki_slug, o => o.title, o => o.status);
-    fillWikiList('ws-list-sculptures', sculptureItems, o => o.wiki_slug, o => o.title, o => o.status);
+    fillWikiList('ws-list-buildings', buildingItems, o => o.wiki_slug, o => o.title, o => o.status, o => o.type, o => o);
+    fillWikiList('ws-list-neuro', neuroItems, o => o.wiki_slug, o => o.title, o => o.status, () => '', o => o);
+    fillWikiList('ws-list-sculptures', sculptureItems, o => o.wiki_slug, o => o.title, o => o.status, o => o.type, o => o);
     fillWikiArchitects();
 
     document.querySelectorAll('.ws-section-header').forEach(btn => {
       btn.addEventListener('click', () => {
         btn.closest('.ws-section').classList.toggle('open');
+        updateCollapseIcon();
+      });
+    });
+
+    ['wf-lost', 'wf-3d', 'wf-neuro'].forEach(id => {
+      const btn = $(id);
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        if (id === 'wf-lost')  wikiFilters.lost  = btn.classList.contains('active');
+        if (id === 'wf-3d')    wikiFilters.d3    = btn.classList.contains('active');
+        if (id === 'wf-neuro') wikiFilters.neuro = btn.classList.contains('active');
+        applyWikiFilters();
       });
     });
   }
 
-  function fillWikiList(listId, items, slugFn, titleFn, statusFn) {
+  function fillWikiList(listId, items, slugFn, titleFn, statusFn, typeFn, itemFn) {
   const ul = $(listId);
   if (!ul) return;
 
   ul.innerHTML = items.map(item => {
-    const status = statusFn(item);
-    const statusBadge = status === 'gone'
-      ? '<span class="ws-status-dot" aria-label="Утрачен" title="Утрачен"></span>'
-      : '';
+    const status   = statusFn(item);
+    const type     = typeFn(item);
+    const obj      = itemFn(item);
+    const isGone   = status === 'gone';
+    const is3d     = type === '3d';
+    const hasNeuro = !!(obj.chronicle_ids && obj.chronicle_ids.length > 0);
 
-    return `<li><a href="#" data-slug="${slugFn(item)}" data-section="${listId.replace('ws-list-','')}" data-id="${item.id}">
+    const badges = [];
+    if (is3d)     badges.push('<span class="ws-badge-3d">3D</span>');
+    if (hasNeuro) badges.push('<span class="material-symbols-outlined ws-badge-neuro">auto_fix_high</span>');
+    if (isGone)   badges.push('<span class="ws-status-dot" title="Утрачен"></span>');
+    const badgesHtml = badges.length ? `<span class="ws-item-badges">${badges.join('')}</span>` : '';
+
+    return `<li><a href="#" data-slug="${slugFn(item)}" data-section="${listId.replace('ws-list-','')}" data-id="${item.id}" data-gone="${isGone ? 1 : 0}" data-d3="${is3d ? 1 : 0}" data-neuro="${hasNeuro ? 1 : 0}">
       <span class="ws-link-title">${titleFn(item)}</span>
-      ${statusBadge}
+      ${badgesHtml}
     </a></li>`;
   }).join('');
 
@@ -1279,6 +1326,7 @@ function hideBottomSheet() {
         s.classList.add('open');
       }
     });
+    updateCollapseIcon();
 
     document.querySelectorAll('.ws-list a').forEach(a => {
       a.classList.toggle('active', a.dataset.slug === slug);
@@ -1410,9 +1458,12 @@ function hideBottomSheet() {
   }
 
   function collapseAllWikiSections() {
-  document.querySelectorAll('.ws-section').forEach(section => {
-    section.classList.remove('open');
-  });
+    const anyOpen = !!document.querySelector('.ws-section.open');
+    document.querySelectorAll('.ws-section').forEach(section => {
+      if (anyOpen) section.classList.remove('open');
+      else section.classList.add('open');
+    });
+    updateCollapseIcon();
   }
 
   // ── WIKI SEARCH ─────────────────────────────

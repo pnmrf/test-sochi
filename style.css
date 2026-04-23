@@ -2249,7 +2249,7 @@ html.dark .vn-btn:hover {
   right: 12px;
   background: var(--surface);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   z-index: 300;
   max-height: 260px;
   overflow-y: auto;
@@ -2317,7 +2317,6 @@ html.dark .vn-btn:hover {
   max-height: 0;
   overflow: hidden;
   opacity: 0;
-  /* transition применяется при ЗАКРЫТИИ */
   transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
 }
 
@@ -2339,15 +2338,14 @@ html.dark .vn-btn:hover {
 .ws-section.open .ws-list {
   max-height: 400px;
   opacity: 1;
-  /* transition применяется при ОТКРЫТИИ */
-  transition: max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.12s ease;
+  transition: max-height 0.38s ease, opacity 0.28s ease;
 }
 
 .ws-list li a {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 9px 16px 9px 40px;
+  gap: 6px;
+  padding: 9px 39px 9px 40px;
   font-size: 13px;
   color: var(--text-muted);
   transition: color 0.15s, background 0.15s;
@@ -2360,6 +2358,86 @@ html.dark .vn-btn:hover {
 
 .ws-list li a.active {
   color: var(--accent);
+  background: rgba(74,158,224,0.10);
+  border-radius: var(--radius-pill);
+}
+
+.ws-item-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.ws-badge-3d {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+.ws-badge-neuro {
+  font-size: 14px !important;
+  color: var(--neuro);
+  opacity: 0.8;
+}
+
+/* ── WIKI FILTER BAR ── */
+.wiki-filter-bar {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  width: var(--sidebar-w);
+  height: 56px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  z-index: 102;
+  padding: 0 10px;
+}
+
+.wf-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  opacity: 0.45;
+}
+
+.wf-btn.active {
+  background: rgba(0,0,0,0.06);
+  border-color: var(--glass-border);
+  color: var(--text);
+  opacity: 1;
+}
+
+.wf-dot {
+  width: 10px;
+  height: 10px;
+  border-width: 1.5px;
+  flex-shrink: 0;
+}
+
+.wf-icon {
+  font-size: 15px !important;
+}
+
+.wf-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
 }
 
 /* Article area */
@@ -2641,7 +2719,7 @@ html.dark .wa-badges .badge.reconstructed {
   .wiki-sidebar {
     position: absolute;
     top: 24px;
-    bottom: 12px;
+    bottom: 78px;
     left: 12px;
     height: auto;
     transform: none !important;
