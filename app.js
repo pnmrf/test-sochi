@@ -253,13 +253,12 @@
   }, 100);
 });
 
-      setTimeout(() => {
+      // ResizeObserver следит за изменением размера контейнера карты
+      // (смена ориентации, переключение вкладок) вместо слепых setTimeout
+      const _mapResizeObs = new ResizeObserver(() => {
         if (STATE.map) STATE.map.resize();
-      }, 500);
-
-      setTimeout(() => {
-        if (STATE.map) STATE.map.resize();
-      }, 1500);
+      });
+      _mapResizeObs.observe($('map-container'));
 
       STATE.map.on('zoom', () => {
         updateMarkerVisibility();
@@ -342,7 +341,8 @@
       prev.style.boxShadow = `0 4px 16px rgba(0,0,0,0.3), 0 0 0 3px ${typeColor(item.type)}`;
 
       const img = document.createElement('img');
-      img.src = getPrimaryImage(item);
+      // Откладываем загрузку: src выставляется только при переключении в preview-режим
+      img.dataset.src = getPrimaryImage(item);
       img.alt = item.title;
       img.onerror = () => {
         img.onerror = null;
@@ -397,6 +397,11 @@
 
       if (showPreview) {
         dot.style.display = 'none';
+        // Ленивая загрузка: ставим src только когда превью впервые показывается
+        const previewImg = prev.querySelector('img');
+        if (previewImg && previewImg.dataset.src && !previewImg.hasAttribute('src')) {
+          previewImg.src = previewImg.dataset.src;
+        }
         prev.style.display = 'block';
         prev.classList.add('visible');
       } else {
@@ -595,8 +600,11 @@
     const frame = $('neuro-frame');
     if (frame) frame.style.aspectRatio = '';
 
-    $('neuro-img-color').src = obj.photo_restored || '';
-    $('neuro-img-bw').src = obj.photo_original || '';
+    // BW/Color загружаем только в compare mode — иначе лишний трафик
+    if (STATE.neuroCompareMode) {
+      $('neuro-img-color').src = obj.photo_restored || '';
+      $('neuro-img-bw').src = obj.photo_original || '';
+    }
 
     $('neuro-info-title').textContent = obj.title;
     $('neuro-info-year').textContent = obj.year || '';
@@ -822,6 +830,13 @@ function setNeuroMode(mode) {
       return;
     }
 
+    // Загружаем compare-изображения лениво — только при первом включении режима
+    const obj = STATE.currentObject;
+    if (obj) {
+      $('neuro-img-color').src = obj.photo_restored || '';
+      $('neuro-img-bw').src = obj.photo_original || '';
+    }
+
     hide(restored);
     show(compare);
     hideBottomSheet();
@@ -921,8 +936,8 @@ function setNeuroMode(mode) {
     const colorImg = obj.photo_restored || obj.photo_original || '';
     const bwImg = obj.photo_original || obj.photo_restored || '';
     card.innerHTML = `
-      <img class="ngc-color" src="${colorImg}" alt="${obj.title || ''}" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
-      <img class="ngc-bw" src="${bwImg}" alt="" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
+      <img class="ngc-color" src="${colorImg}" alt="${obj.title || ''}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
+      <img class="ngc-bw" src="${bwImg}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
       <div class="gallery-card-overlay" style="z-index:2;">
         <div class="gallery-card-title">${obj.title || ''}</div>
         <div class="gallery-card-year">${obj.year || ''}</div>
@@ -949,7 +964,7 @@ function setNeuroMode(mode) {
       const card = document.createElement('div');
       card.className = 'gallery-card';
       card.innerHTML = `
-        <img src="${obj.poster_url || ''}" alt="${obj.title}" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
+        <img src="${obj.poster_url || ''}" alt="${obj.title}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/photos/placeholder.jpg'" />
         <span class="badge model3d">3D</span>
         <div class="gallery-card-overlay">
           <div class="gallery-card-title">${obj.title}</div>
@@ -1564,10 +1579,10 @@ function toggleMobileSidebar() {
     if (screen) screen.classList.add('active');
 
     if (name === 'map' && STATE.map) {
-      setTimeout(() => STATE.map.resize(), 50);
-      setTimeout(() => STATE.map.resize(), 300);
-      setTimeout(() => updateMarkerVisibility(), 60);
-      setTimeout(() => updateMarkerVisibility(), 320);
+      requestAnimationFrame(() => {
+        STATE.map.resize();
+        updateMarkerVisibility();
+      });
     }
   }
 
@@ -1601,10 +1616,10 @@ function toggleMobileSidebar() {
     if (tab === 'map') {
       switchScreen('map');
       if (STATE.map) {
-        setTimeout(() => STATE.map.resize(), 50);
-        setTimeout(() => STATE.map.resize(), 300);
-        setTimeout(() => updateMarkerVisibility(), 60);
-        setTimeout(() => updateMarkerVisibility(), 320);
+        requestAnimationFrame(() => {
+          STATE.map.resize();
+          updateMarkerVisibility();
+        });
       }
     } else if (tab === 'neuro') {
       if (STATE.lastNeuro) {
