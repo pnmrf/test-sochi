@@ -14,8 +14,8 @@
   <link rel="dns-prefetch" href="https://api.maptiler.com" />
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Tenor+Sans&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
   <noscript><link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Tenor+Sans&display=swap" rel="stylesheet" /></noscript>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,grid_view,home,hourglass_empty,info,layers,map,menu_book,my_location,person,photo_library,remove,search,send,unfold_less,view_in_ar,visibility&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,grid_view,home,hourglass_empty,info,layers,map,menu_book,my_location,person,photo_library,remove,search,send,unfold_less,view_in_ar,visibility&display=swap" rel="stylesheet" /></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,grid_view,home,hourglass_empty,info,layers,light_mode,map,menu_book,my_location,person,photo_library,remove,search,send,unfold_less,view_in_ar,visibility&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,grid_view,home,hourglass_empty,info,layers,light_mode,map,menu_book,my_location,person,photo_library,remove,search,send,unfold_less,view_in_ar,visibility&display=swap" rel="stylesheet" /></noscript>
 
   <link rel="preload" href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
   <noscript><link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet" /></noscript>
@@ -46,6 +46,13 @@
     </header>
 
     <section id="screen-map" class="screen active">
+      <div id="map-topbar" class="map-topbar glass">
+        <img src="assets/logo.webp" class="tb-logo" alt="ВМАС" id="map-btn-home" decoding="async" onerror="this.style.display='none'" />
+        <span class="tb-title">ВМАС</span>
+        <button class="tb-btn" id="map-btn-theme" aria-label="Сменить тему">
+          <span class="material-symbols-outlined" id="map-theme-icon">dark_mode</span>
+        </button>
+      </div>
       <div id="map-container"></div>
 
       <aside id="sidebar-card" class="sidebar-card hidden">
@@ -71,11 +78,11 @@
       </aside>
 
       <div class="map-controls">
-        <button class="mc-btn" id="btn-reset-view" aria-label="Вернуться к начальной позиции">
-          <span class="material-symbols-outlined">home</span>
-        </button>
-        <button class="mc-btn" id="btn-compass" aria-label="Компас / 3D">
+        <button class="mc-btn" id="btn-compass" aria-label="Вернуться на север">
           <span class="material-symbols-outlined">explore</span>
+        </button>
+        <button class="mc-btn" id="btn-3d" aria-label="Режим 3D">
+          <span class="material-symbols-outlined">view_in_ar</span>
         </button>
 
         <div class="mc-group">
@@ -98,7 +105,7 @@
       </div>
 
       <div id="legend-panel" class="legend-panel glass hidden">
-        <div class="legend-handle"></div>
+        <div class="legend-handle-wrap"><div class="legend-handle"></div></div>
         <h3 class="legend-title">Легенда</h3>
 
         <div class="legend-items">
@@ -164,12 +171,11 @@
           <div class="mc-info">
             <div class="mc-img-wrap">
               <img id="mc-img" src="" alt="" decoding="async" />
-              <span id="mc-badge" class="badge"></span>
             </div>
 
             <div class="mc-text">
               <h3 id="mc-title" class="mc-title"></h3>
-              <p id="mc-meta" class="mc-meta"></p>
+              <div id="mc-tags" class="sc-tags"></div>
               <p id="mc-desc" class="mc-desc"></p>
 
               <div id="mc-architect-list" class="mc-architect-list"></div>

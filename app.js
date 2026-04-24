@@ -195,6 +195,7 @@
 
     app.classList.remove('hidden');
     show(app);
+    $('top-bar').style.display = 'none';
 
     initMap();
 
@@ -300,6 +301,13 @@
           !e.originalEvent.target.closest('.marker-preview')
         ) {
           closeCards();
+          if (STATE.legendVisible) {
+            const panel = $('legend-panel');
+            if (panel) panel.classList.add('hidden');
+            STATE.legendVisible = false;
+            const btn = $('btn-legend-toggle');
+            if (btn) btn.classList.remove('active');
+          }
         }
       });
     });
@@ -566,19 +574,8 @@
     if (mc) {
       $('mc-img').src = getPrimaryImage(obj);
 
-  const mcBadge = $('mc-badge');
-  if (obj.type === '3d') {
-    mcBadge.textContent = '3D';
-    mcBadge.className = 'badge model3d';
-    mcBadge.style.display = '';
-  } else {
-    mcBadge.textContent = '';
-    mcBadge.className = 'badge';
-    mcBadge.style.display = 'none';
-  }
-
   $('mc-title').textContent = obj.title;
-  $('mc-meta').textContent = getItemMeta(obj);
+  renderItemTags('mc-tags', obj);
   $('mc-desc').textContent = obj.short_desc || '';
 
       $('mc-btn-open').innerHTML = `<span class="material-symbols-outlined">${primaryIcon}</span> ${primaryLabel}`;
@@ -594,6 +591,12 @@
       renderAuthorList('mc-architect-list', obj);
 
       mc.classList.remove('hidden');
+
+      if (window.innerWidth < 768 && STATE.legendVisible) {
+        $('legend-panel')?.classList.add('hidden');
+        STATE.legendVisible = false;
+        $('btn-legend-toggle')?.classList.remove('active');
+      }
     }
 
     STATE.map.flyTo({
@@ -990,7 +993,6 @@ function setNeuroMode(mode) {
       card.className = 'gallery-card';
       card.innerHTML = `
         <img src="${obj.poster_url || ''}" alt="${obj.title}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/photos/placeholder.webp'" />
-        <span class="badge model3d">3D</span>
         <div class="gallery-card-overlay">
           <div class="gallery-card-title">${obj.title}</div>
           <div class="gallery-card-year">${obj.year_built || ''}</div>
@@ -1253,11 +1255,13 @@ function hideBottomSheet() {
       const is3d     = a.dataset.d3 === '1';
       const hasNeuro = a.dataset.neuro === '1';
 
-      let visible = true;
-      if (isGone   && !wikiFilters.lost)  visible = false;
-      if (is3d     && !wikiFilters.d3)    visible = false;
-      if (hasNeuro && !wikiFilters.neuro) visible = false;
+      // Items with no special tags always visible
+      if (!isGone && !is3d && !hasNeuro) { li.style.display = ''; return; }
 
+      // Visible if ANY matching filter is active (OR logic)
+      const visible = (isGone && wikiFilters.lost) ||
+                      (is3d   && wikiFilters.d3)   ||
+                      (hasNeuro && wikiFilters.neuro);
       li.style.display = visible ? '' : 'none';
     });
   }
@@ -1593,7 +1597,7 @@ function toggleMobileSidebar() {
     function switchScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
 
-    const hideGlobalBars = name === '3d-viewer' || name === 'neuro' || name === 'wiki';
+    const hideGlobalBars = name === '3d-viewer' || name === 'neuro' || name === 'wiki' || name === 'map';
     $('top-bar').style.display = hideGlobalBars ? 'none' : '';
     $('tab-bar').style.display = (name === '3d-viewer') ? 'none' : '';
 
@@ -1742,6 +1746,11 @@ if (wikiThemeIcon) {
       viewerThemeIcon.textContent = STATE.isDark ? 'light_mode' : 'dark_mode';
     }
 
+    const mapThemeIcon = $('map-theme-icon');
+    if (mapThemeIcon) {
+      mapThemeIcon.textContent = STATE.isDark ? 'light_mode' : 'dark_mode';
+    }
+
     const neuroThemeIcon = $('neuro-theme-icon');
     if (neuroThemeIcon) {
       neuroThemeIcon.textContent = STATE.isDark ? 'light_mode' : 'dark_mode';
@@ -1777,6 +1786,10 @@ if (wikiThemeIcon) {
     if (btn) {
       btn.classList.toggle('active', STATE.legendVisible);
     }
+
+    if (STATE.legendVisible && window.innerWidth < 768) {
+      closeCards();
+    }
   }
 
   // ── EVENTS ──────────────────────────────────
@@ -1794,15 +1807,24 @@ if (wikiCollapseBtn) {
       switchTab('home');
     });
 
-    $('btn-reset-view').addEventListener('click', () => {
+    $('map-btn-home').addEventListener('click', () => switchTab('home'));
+    $('map-btn-theme').addEventListener('click', toggleTheme);
+
+    $('btn-compass').addEventListener('click', () => {
       if (!STATE.map) return;
       STATE.map.flyTo({
         center: CONFIG.center,
         zoom: CONFIG.zoom,
-        pitch: CONFIG.pitch,
-        bearing: CONFIG.bearing,
+        pitch: 0,
+        bearing: 0,
         duration: 900,
       });
+      STATE.is3d = false;
+    });
+
+    $('btn-3d').addEventListener('click', () => {
+      if (!STATE.map) return;
+      toggle3D();
     });
 
     const wikiThemeBtn = $('wiki-theme');
@@ -1844,10 +1866,6 @@ if (wikiCollapseBtn) {
 
     $('btn-theme').addEventListener('click', toggleTheme);
 
-    $('btn-compass').addEventListener('click', () => {
-      if (STATE.map.getBearing() !== 0 || STATE.map.getPitch() !== 0) resetNorth();
-      else toggle3D();
-    });
 
     $('btn-zoom-in').addEventListener('click', () => STATE.map && STATE.map.zoomIn());
     $('btn-zoom-out').addEventListener('click', () => STATE.map && STATE.map.zoomOut());
@@ -2000,6 +2018,79 @@ if (articleArea) {
 
     document.querySelectorAll('.bottom-sheet, .article-sheet').forEach(initSheetSwipe);
 
+    // Swipe-to-close for legend panel on mobile
+    (function() {
+      const legend = $('legend-panel');
+      const handle = legend?.querySelector('.legend-handle-wrap');
+      if (!legend || !handle) return;
+      let startY = 0, currentY = 0, dragging = false;
+
+      function startDrag(clientY) {
+        if (legend.classList.contains('hidden')) return;
+        dragging = true; startY = clientY; currentY = 0;
+        legend.style.transition = 'none';
+      }
+      function moveDrag(clientY) {
+        if (!dragging) return;
+        currentY = Math.max(0, clientY - startY);
+        legend.style.transform = `translateY(${currentY}px)`;
+      }
+      function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+        legend.style.transition = '';
+        legend.style.transform = '';
+        if (currentY > 80) {
+          legend.classList.add('hidden');
+          STATE.legendVisible = false;
+          $('btn-legend-toggle')?.classList.remove('active');
+        }
+      }
+
+      handle.addEventListener('touchstart', e => startDrag(e.touches[0].clientY), { passive: true });
+      handle.addEventListener('touchmove', e => { moveDrag(e.touches[0].clientY); e.preventDefault(); }, { passive: false });
+      handle.addEventListener('touchend', endDrag);
+      handle.addEventListener('touchcancel', endDrag);
+      handle.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e.clientY); });
+      window.addEventListener('mousemove', e => moveDrag(e.clientY));
+      window.addEventListener('mouseup', endDrag);
+    })();
+
+    // Swipe-to-close for mobile map card
+    (function() {
+      const card = $('mobile-card');
+      if (!card) return;
+      const handle = card.querySelector('.mc-handle-wrap');
+      if (!handle) return;
+      let startY = 0, currentY = 0, dragging = false;
+
+      function startDrag(clientY) {
+        if (card.classList.contains('hidden')) return;
+        dragging = true; startY = clientY; currentY = 0;
+        card.style.transition = 'none';
+      }
+      function moveDrag(clientY) {
+        if (!dragging) return;
+        currentY = Math.max(0, clientY - startY);
+        card.style.transform = `translateY(${currentY}px)`;
+      }
+      function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+        card.style.transition = '';
+        card.style.transform = '';
+        if (currentY > 80) closeCards();
+      }
+
+      handle.addEventListener('touchstart', e => startDrag(e.touches[0].clientY), { passive: true });
+      handle.addEventListener('touchmove', e => { moveDrag(e.touches[0].clientY); e.preventDefault(); }, { passive: false });
+      handle.addEventListener('touchend', endDrag);
+      handle.addEventListener('touchcancel', endDrag);
+      handle.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e.clientY); });
+      window.addEventListener('mousemove', e => moveDrag(e.clientY));
+      window.addEventListener('mouseup', endDrag);
+    })();
+
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         if (STATE.activeBottomSheet) {
@@ -2031,17 +2122,12 @@ if (articleArea) {
     if (savedTheme !== 'light') {
       STATE.isDark = true;
       document.documentElement.classList.add('dark');
-      ['theme-icon', 'wiki-theme-icon', 'wiki-theme-icon-mobile', 'viewer-theme-icon', 'neuro-theme-icon'].forEach(id => {
+      ['theme-icon', 'wiki-theme-icon', 'wiki-theme-icon-mobile', 'viewer-theme-icon', 'neuro-theme-icon', 'map-theme-icon'].forEach(id => {
         const el = $(id);
         if (el) el.textContent = 'light_mode';
       });
     }
     initEvents();
-    if (window.innerWidth >= 1100) {
-      STATE.legendVisible = true;
-      $('legend-panel')?.classList.remove('hidden');
-      $('btn-legend-toggle')?.classList.add('active');
-    }
     initSplash();
     updateTabIndicator();
     updateTopBarTitle();

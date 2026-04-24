@@ -2,7 +2,7 @@
   "name": "ВМАС — Виртуальный музей архитектуры Сочи",
   "short_name": "ВМАС",
   "description": "Интерактивная платформа архитектурного наследия Сочи",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#F7F5F2",
   "theme_color": "#F7F5F2",

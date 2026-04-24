@@ -34,7 +34,7 @@
   --tab-h: 68px;
   --transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar-w: 360px;
-  --wiki-article-shift: calc(var(--sidebar-w) / -2);
+  --wiki-article-shift: calc((var(--sidebar-w) + 36px) / -2);
 
   --restored: #B45309;
   --restored-bg: rgba(245, 158, 11, 0.14);
@@ -404,6 +404,28 @@ html.dark .tab-indicator {
   z-index: 1;
 }
 
+/* Map topbar — replaces global top-bar on the map screen */
+.map-topbar {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 520px;
+  height: var(--tb-h);
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  z-index: 20;
+  pointer-events: none;
+}
+.map-topbar .tb-btn,
+.map-topbar .tb-logo {
+  pointer-events: auto;
+}
+
 #screen-map .map-controls,
 #screen-map .legend-panel,
 #screen-map .sidebar-card,
@@ -495,7 +517,7 @@ html.dark .map-controls {
 .mc-btn {
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   background: transparent;
   border: none;
   box-shadow: none;
@@ -564,6 +586,7 @@ html.dark .mc-divider {
   border-radius: var(--radius-lg);
   padding: 8px 16px 16px;
   transition: opacity var(--transition), transform var(--transition);
+  z-index: 30;
 }
 
 .legend-panel.hidden {
@@ -572,12 +595,18 @@ html.dark .mc-divider {
   transform: translateY(12px);
 }
 
+.legend-handle-wrap {
+  padding: 10px 0 4px;
+  display: flex;
+  justify-content: center;
+  cursor: grab;
+}
+
 .legend-handle {
   width: 36px;
   height: 4px;
   background: var(--text-light);
   border-radius: 9999px;
-  margin: 0 auto 12px;
 }
 
 .legend-title {
@@ -1015,7 +1044,7 @@ html.dark .btn-glass:hover {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1.15;
-  margin-bottom: 3px;
+  margin-bottom: 8px;
   display: block;
   overflow: visible;
 }
@@ -2360,6 +2389,9 @@ html.dark .vn-btn:hover {
   color: var(--accent);
   background: rgba(74,158,224,0.10);
   border-radius: var(--radius-pill);
+  margin: 0 10px;
+  padding-left: 30px;
+  padding-right: 10px;
 }
 
 .ws-item-badges {
@@ -2391,7 +2423,7 @@ html.dark .vn-btn:hover {
   left: 12px;
   width: var(--sidebar-w);
   height: 56px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -2605,12 +2637,25 @@ html.dark .wa-badges .badge.reconstructed {
   transition: background var(--transition), color var(--transition), box-shadow var(--transition);
 }
 
+html.dark .wa-map-btn,
+html.dark .wa-view-btn {
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+}
+
 .wa-map-btn:hover,
 .wa-view-btn:hover {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  background: var(--accent);
   color: white;
   box-shadow: 0 4px 14px rgba(74,158,224,0.35);
   filter: none;
+}
+
+html.dark .wa-map-btn:hover,
+html.dark .wa-view-btn:hover {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 4px 14px rgba(74,158,224,0.35);
 }
 
 .wiki-inline-object-link {
@@ -2741,7 +2786,7 @@ html.dark .wa-badges .badge.reconstructed {
 
   .wiki-article-area {
     padding-top: 0;
-    padding-left: calc(var(--sidebar-w) + 24px);
+    padding-left: calc(var(--sidebar-w) + 36px);
     scrollbar-gutter: stable;
   }
 }
@@ -2825,6 +2870,63 @@ html.dark .wa-badges .badge.reconstructed {
 
   .top-bar {
     max-width: calc(100% - 24px);
+  }
+
+  .mc-group {
+    display: none;
+  }
+
+  /* Map controls — near center but higher so legend has room */
+  .map-controls {
+    top: 40%;
+    transform: translateY(-50%);
+    gap: 1px;
+    padding: 4px;
+  }
+
+  .mc-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 19px;
+  }
+
+  /* Hide mc-architect-list in mobile card — tags already show author */
+  #mobile-card .mc-architect-list {
+    display: none;
+  }
+
+  /* Legend as bottom sheet on mobile */
+  .legend-panel {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    max-width: none !important;
+    width: 100% !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+    padding: 0 16px calc(var(--tab-h) + env(safe-area-inset-bottom) + 32px) !important;
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  }
+
+  .legend-panel.hidden {
+    transform: translateY(100%) !important;
+    opacity: 1 !important;
+  }
+
+  /* Wiki filter bar — only when sidebar is open on mobile */
+  .wiki-filter-bar {
+    display: none !important;
+    position: fixed !important;
+    bottom: calc(var(--tab-h) + 12px) !important;
+    left: 16px !important;
+    width: calc(min(86vw, 320px) - 32px) !important;
+    z-index: 101 !important;
+  }
+
+  .wiki-sidebar.open ~ .wiki-filter-bar {
+    display: flex !important;
   }
 }
 
