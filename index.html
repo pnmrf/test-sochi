@@ -14,8 +14,8 @@
   <link rel="dns-prefetch" href="https://api.maptiler.com" />
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Tenor+Sans&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
   <noscript><link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Tenor+Sans&display=swap" rel="stylesheet" /></noscript>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,grid_view,home,hourglass_empty,info,layers,light_mode,map,menu_book,my_location,person,photo_library,remove,search,send,unfold_less,view_in_ar,visibility&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,grid_view,home,hourglass_empty,info,layers,light_mode,map,menu_book,my_location,person,photo_library,remove,search,send,unfold_less,view_in_ar,visibility&display=swap" rel="stylesheet" /></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,grid_view,home,hourglass_empty,info,layers,light_mode,map,menu_book,my_location,person,photo_library,push_pin,remove,restart_alt,search,send,tune,unfold_less,view_in_ar,visibility&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,grid_view,home,hourglass_empty,info,layers,light_mode,map,menu_book,my_location,person,photo_library,push_pin,remove,restart_alt,search,send,tune,unfold_less,view_in_ar,visibility&display=swap" rel="stylesheet" /></noscript>
 
   <link rel="preload" href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
   <noscript><link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet" /></noscript>
@@ -82,7 +82,7 @@
           <span class="material-symbols-outlined">explore</span>
         </button>
         <button class="mc-btn" id="btn-3d" aria-label="Режим 3D">
-          <span class="material-symbols-outlined">view_in_ar</span>
+          <span class="material-symbols-outlined">restart_alt</span>
         </button>
 
         <div class="mc-group">
@@ -251,10 +251,6 @@
         </div>
 
         <div class="ns-map-btn-wrap">
-          <button class="ns-map-btn glass" id="neuro-btn-gallery">
-            <span class="material-symbols-outlined">grid_view</span>
-            В галерею
-          </button>
           <button class="ns-map-btn glass" id="neuro-btn-map">
             <span class="material-symbols-outlined">map</span>
             Смотреть на карте
@@ -290,6 +286,16 @@
       </div>
 
       <div id="neuro-overlay" class="neuro-overlay hidden"></div>
+
+      <header id="neuro-top-bar" class="top-bar top-bar-neuro glass">
+        <button class="tb-btn" id="neuro-back-mobile" aria-label="Назад">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <span class="tb-title"></span>
+        <button class="tb-btn" id="neuro-theme-mobile" aria-label="Сменить тему">
+          <span class="material-symbols-outlined" id="neuro-theme-icon-mobile">dark_mode</span>
+        </button>
+      </header>
     </section>
 
     <section id="screen-neuro-gallery" class="screen">
@@ -317,7 +323,6 @@
         poster=""
         alt="3D модель"
         camera-controls
-        auto-rotate
         ar
         ar-modes="webxr scene-viewer quick-look"
         shadow-intensity="1"
@@ -335,19 +340,10 @@
             <span class="material-symbols-outlined">photo_library</span>
           </button>
           <button class="va-btn" id="va-reset" aria-label="Начальный ракурс">
-            <span class="material-symbols-outlined">3d_rotation</span>
+            <span class="material-symbols-outlined">restart_alt</span>
           </button>
-          <button class="va-btn" id="va-ar" aria-label="AR">
-            <span class="material-symbols-outlined">view_in_ar</span>
-          </button>
-        </div>
-
-        <div class="viewer-nav-group">
-          <button class="vn-btn" id="viewer-prev" aria-label="Предыдущая модель">
-          <span class="material-symbols-outlined">chevron_left</span>
-          </button>
-          <button class="vn-btn" id="viewer-next" aria-label="Следующая модель">
-          <span class="material-symbols-outlined">chevron_right</span>
+          <button class="va-btn" id="va-annotations" aria-label="Аннотации">
+            <span class="material-symbols-outlined">push_pin</span>
           </button>
         </div>
       </div>
@@ -375,18 +371,8 @@
       <div id="viewer-gallery-sheet" class="bottom-sheet glass hidden">
         <div class="bs-handle-wrap"><div class="bs-handle"></div></div>
         <div class="bs-content">
-          <h3 class="bs-title">Галерея <span id="vg-counter" class="vg-counter"></span></h3>
-          <div class="vg-carousel" id="vg-carousel">
-            <img id="vg-photo" src="" alt="" decoding="async" />
-          </div>
-          <div class="vg-nav-row" id="vg-nav-row">
-            <button class="vg-nav-btn" id="vg-prev" aria-label="Предыдущее фото">
-              <span class="material-symbols-outlined">chevron_left</span>
-            </button>
-            <button class="vg-nav-btn" id="vg-next" aria-label="Следующее фото">
-              <span class="material-symbols-outlined">chevron_right</span>
-            </button>
-          </div>
+          <h3 class="bs-title">Галерея</h3>
+          <div id="vg-photos" class="vg-photos"></div>
         </div>
       </div>
 
@@ -394,7 +380,13 @@
         <button id="lightbox-close" class="lightbox-close" aria-label="Закрыть">
           <span class="material-symbols-outlined">close</span>
         </button>
+        <button id="lightbox-prev" class="lightbox-nav lightbox-nav-prev" aria-label="Предыдущее">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
         <img id="lightbox-img" src="" alt="" decoding="async" />
+        <button id="lightbox-next" class="lightbox-nav lightbox-nav-next" aria-label="Следующее">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
       </div>
     </section>
 

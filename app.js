@@ -51,6 +51,8 @@
   const show = el => el && el.classList.remove('hidden');
   const hide = el => el && el.classList.add('hidden');
 
+  let _lbScale = 1;
+
   function typeColor(type) {
     return { neuro: '#F59E0B', '3d': '#4A9EE0', building: '#6B7280', sculpture: '#A78BFA' }[type] || '#6B7280';
   }
@@ -982,8 +984,14 @@ function setNeuroMode(mode) {
       </div>`;
 
     card.addEventListener('click', () => {
-      STATE.neuroCompareMode = false;
-      openNeuro(obj, 'neuro');
+      if (window.innerWidth <= 767 && !card.classList.contains('revealed')) {
+        document.querySelectorAll('.neuro-gallery-card.revealed')
+          .forEach(c => c.classList.remove('revealed'));
+        card.classList.add('revealed');
+      } else {
+        STATE.neuroCompareMode = false;
+        openNeuro(obj, 'neuro');
+      }
     });
 
     grid.appendChild(card);
@@ -1091,28 +1099,18 @@ function setNeuroMode(mode) {
     } else if (type === 'gallery') {
       const photos = obj.gallery || [obj.poster_url].filter(Boolean);
       STATE.galleryPhotos = photos;
-      STATE.galleryIndex = 0;
 
-      function updateGallerySlide() {
-        const p = STATE.galleryPhotos[STATE.galleryIndex];
-        $('vg-photo').src = p || '';
-        $('vg-photo').alt = obj.title;
-        $('vg-counter').textContent = `${STATE.galleryIndex + 1} / ${STATE.galleryPhotos.length}`;
-        const navRow = $('vg-nav-row');
-        if (navRow) navRow.style.display = STATE.galleryPhotos.length > 1 ? '' : 'none';
-      }
+      $('vg-photos').innerHTML = photos.map((p, i) =>
+        `<img src="${p}" alt="${obj.title}" data-index="${i}" onerror="this.style.display='none'" />`
+      ).join('');
 
-      $('vg-prev').onclick = () => {
-        STATE.galleryIndex = (STATE.galleryIndex - 1 + STATE.galleryPhotos.length) % STATE.galleryPhotos.length;
-        updateGallerySlide();
-      };
-      $('vg-next').onclick = () => {
-        STATE.galleryIndex = (STATE.galleryIndex + 1) % STATE.galleryPhotos.length;
-        updateGallerySlide();
-      };
-      $('vg-photo').onclick = () => openLightbox(STATE.galleryPhotos[STATE.galleryIndex]);
+      $('vg-photos').querySelectorAll('img').forEach(img => {
+        img.addEventListener('click', () => {
+          hideBottomSheet();
+          openLightbox(img.src, STATE.galleryPhotos, parseInt(img.dataset.index));
+        });
+      });
 
-      updateGallerySlide();
       openBottomSheet($('viewer-gallery-sheet'));
 
     } else if (type === 'ar') {
@@ -1142,9 +1140,26 @@ function setNeuroMode(mode) {
     }
   }
 
-  function openLightbox(src) {
-    $('lightbox-img').src = src;
+  function openLightbox(src, photos = null, index = 0) {
+    STATE.galleryPhotos = photos || [src];
+    STATE.galleryIndex = index;
+    _lbScale = 1;
+    const img = $('lightbox-img');
+    img.src = src;
+    img.style.transform = '';
     show($('lightbox'));
+    const hasMany = STATE.galleryPhotos.length > 1;
+    $('lightbox-prev').style.display = hasMany ? '' : 'none';
+    $('lightbox-next').style.display = hasMany ? '' : 'none';
+  }
+
+  function lightboxStep(dir) {
+    if (!STATE.galleryPhotos.length) return;
+    STATE.galleryIndex = (STATE.galleryIndex + dir + STATE.galleryPhotos.length) % STATE.galleryPhotos.length;
+    const img = $('lightbox-img');
+    img.src = STATE.galleryPhotos[STATE.galleryIndex];
+    img.style.transform = '';
+    _lbScale = 1;
   }
 
   // ── BOTTOM SHEET ─────────────────────────────
@@ -1487,39 +1502,30 @@ function hideBottomSheet() {
     
     const relatedObjects = getArchitectObjects(arch.id);
 
+    const objectsHtml = relatedObjects.length
+      ? relatedObjects.map(o => `<a href="#" class="wiki-inline-object-link" data-slug="${o.wiki_slug}">${o.title}</a>`).join('<br>')
+      : '—';
+
     $('wa-facts').innerHTML = `
       <div>
         <div class="wa-fact-label">Годы жизни</div>
         <div class="wa-fact-value">${arch.years || '—'}</div>
       </div>
-      <div>
-        <div class="wa-fact-label">Объектов в базе</div>
-        <div class="wa-fact-value">${relatedObjects.length}</div>
+      <div style="grid-column: 1 / -1;">
+        <div class="wa-fact-label">Объекты в базе</div>
+        <div class="wa-fact-value">${objectsHtml}</div>
       </div>
     `;
 
-    const md = await loadMarkdown(arch.wiki_slug);
-    const worksHtml = relatedObjects.length
-      ? `
-        <h3>Связанные объекты</h3>
-        <p>
-          ${relatedObjects.map(obj => `
-            <a href="#" class="wiki-inline-object-link" data-slug="${obj.wiki_slug}">
-              ${obj.title}
-            </a>
-          `).join('<br>')}
-        </p>
-      `
-      : '';
-
-    $('wa-body').innerHTML = (md ? marked.parse(md) : `<p>${arch.bio || ''}</p>`) + worksHtml;
-
-    $('wa-body').querySelectorAll('.wiki-inline-object-link').forEach(link => {
+    $('wa-facts').querySelectorAll('.wiki-inline-object-link').forEach(link => {
       link.addEventListener('click', e => {
         e.preventDefault();
         openWikiArticle(link.dataset.slug, sectionForSlug(link.dataset.slug));
       });
     });
+
+    const md = await loadMarkdown(arch.wiki_slug);
+    $('wa-body').innerHTML = md ? marked.parse(md) : `<p>${arch.bio || ''}</p>`;
 
     hide($('wa-map-btn'));
     const viewBtn = $('wa-view-btn');
@@ -1781,6 +1787,11 @@ if (wikiThemeIcon) {
       neuroThemeIcon.textContent = STATE.isDark ? 'light_mode' : 'dark_mode';
     }
 
+    const neuroThemeIconMobile = $('neuro-theme-icon-mobile');
+    if (neuroThemeIconMobile) {
+      neuroThemeIconMobile.textContent = STATE.isDark ? 'light_mode' : 'dark_mode';
+    }
+
     const style = STATE.isDark
       ? `https://api.maptiler.com/maps/dataviz-dark/style.json?key=${CONFIG.mapTilerKey}`
       : `https://api.maptiler.com/maps/dataviz-light/style.json?key=${CONFIG.mapTilerKey}`;
@@ -1858,15 +1869,6 @@ if (wikiCollapseBtn) {
     const neuroThemeBtn = $('neuro-theme');
     if (neuroThemeBtn) neuroThemeBtn.addEventListener('click', toggleTheme);
 
-    const neuroGalleryBtn = $('neuro-btn-gallery');
-    if (neuroGalleryBtn) {
-      neuroGalleryBtn.addEventListener('click', () => {
-        closeNeuroSidebar();
-        renderNeuroGallery();
-        switchScreen('neuro-gallery');
-      });
-    }
-
     const neuroMapBtn = $('neuro-btn-map');
     if (neuroMapBtn) {
       neuroMapBtn.addEventListener('click', () => {
@@ -1931,14 +1933,30 @@ if (wikiCollapseBtn) {
     if (neuroSidebarClose) {
       neuroSidebarClose.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (window.innerWidth <= 767) {
+          closeNeuroSidebar();
+          return;
+        }
         hideBottomSheet();
         STATE.lastNeuro = null;
-        if (STATE.neuroFrom === 'wiki') switchTab('wiki');
-        else if (STATE.neuroFrom === 'neuro') {
-          renderNeuroGallery();
-          switchScreen('neuro-gallery');
-        } else switchTab('map');
+        renderNeuroGallery();
+        switchScreen('neuro-gallery');
       });
+    }
+
+    const neuroBackMobile = $('neuro-back-mobile');
+    if (neuroBackMobile) {
+      neuroBackMobile.addEventListener('click', () => {
+        hideBottomSheet();
+        STATE.lastNeuro = null;
+        renderNeuroGallery();
+        switchScreen('neuro-gallery');
+      });
+    }
+
+    const neuroThemeMobile = $('neuro-theme-mobile');
+    if (neuroThemeMobile) {
+      neuroThemeMobile.addEventListener('click', toggleTheme);
     }
 
     const neuroOverlay = $('neuro-overlay');
@@ -1966,49 +1984,71 @@ if (wikiCollapseBtn) {
     $('va-info').addEventListener('click', () => openViewerSheet('info'));
     $('vi-btn-more').addEventListener('click', () => {
       const obj = STATE.currentViewer3d;
-      if (obj) openViewerArticle(obj);
+      if (obj && obj.wiki_slug) openWikiArticle(obj.wiki_slug, sectionForSlug(obj.wiki_slug));
     });
 
-    // Свайп в галерее
-    let _galSwipeX = 0;
-    const carousel = $('vg-carousel');
-    if (carousel) {
-      carousel.addEventListener('touchstart', e => { _galSwipeX = e.touches[0].clientX; }, { passive: true });
-      carousel.addEventListener('touchend', e => {
-        const dx = e.changedTouches[0].clientX - _galSwipeX;
-        if (Math.abs(dx) < 40 || !STATE.galleryPhotos.length) return;
-        STATE.galleryIndex = dx < 0
-          ? (STATE.galleryIndex + 1) % STATE.galleryPhotos.length
-          : (STATE.galleryIndex - 1 + STATE.galleryPhotos.length) % STATE.galleryPhotos.length;
-        $('vg-photo').src = STATE.galleryPhotos[STATE.galleryIndex] || '';
-        $('vg-counter').textContent = `${STATE.galleryIndex + 1} / ${STATE.galleryPhotos.length}`;
-      });
+    // Навигация в лайтбоксе
+    $('lightbox-prev').addEventListener('click', e => { e.stopPropagation(); lightboxStep(-1); });
+    $('lightbox-next').addEventListener('click', e => { e.stopPropagation(); lightboxStep(1); });
+
+    let _lbSwipeX = 0;
+    let _lbPinching = false;
+    let _lbBaseScale = 1;
+    let _lbInitDist = 0;
+
+    function _lbPinchDist(t) {
+      const dx = t[0].clientX - t[1].clientX;
+      const dy = t[0].clientY - t[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
     }
+
+    $('lightbox').addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        _lbPinching = true;
+        _lbInitDist = _lbPinchDist(e.touches);
+        _lbBaseScale = _lbScale;
+      } else {
+        _lbPinching = false;
+        _lbSwipeX = e.touches[0].clientX;
+      }
+    }, { passive: true });
+
+    $('lightbox').addEventListener('touchmove', e => {
+      if (_lbPinching && e.touches.length === 2) {
+        const dist = _lbPinchDist(e.touches);
+        _lbScale = Math.min(5, Math.max(1, _lbBaseScale * (dist / _lbInitDist)));
+        $('lightbox-img').style.transform = `scale(${_lbScale})`;
+      }
+    }, { passive: true });
+
+    $('lightbox').addEventListener('touchend', e => {
+      if (_lbPinching) {
+        if (e.touches.length < 2) _lbPinching = false;
+        return;
+      }
+      const dx = e.changedTouches[0].clientX - _lbSwipeX;
+      if (Math.abs(dx) > 40 && _lbScale <= 1) lightboxStep(dx < 0 ? 1 : -1);
+    });
 
     $('va-reset').addEventListener('click', () => {
       const mv = $('model-viewer');
-      mv.cameraOrbit = '0deg 75deg 105%';
-      mv.fieldOfView = '30deg';
+      mv.cameraTarget = 'auto';
+      mv.cameraOrbit = 'auto';
+      mv.fieldOfView = 'auto';
       if (mv.resetTurntableRotation) mv.resetTurntableRotation(0);
+      if (mv.jumpCameraToGoal) mv.jumpCameraToGoal();
       document.querySelectorAll('.va-btn').forEach(b => b.classList.remove('active'));
       hideBottomSheet();
     });
     $('va-gallery').addEventListener('click', () => openViewerSheet('gallery'));
-    $('va-ar').addEventListener('click', () => openViewerSheet('ar'));
 
-    $('viewer-prev').addEventListener('click', () => {
-      const items = STATE.objects.filter(o => o.type === '3d');
-      if (!items.length) return;
-      STATE.viewer3dIndex = (STATE.viewer3dIndex - 1 + items.length) % items.length;
-      loadViewer3d(items[STATE.viewer3dIndex]);
+    $('va-annotations').addEventListener('click', () => {
+      const mv = $('model-viewer');
+      const btn = $('va-annotations');
+      const on = mv.classList.toggle('annotations-visible');
+      btn.classList.toggle('active', on);
     });
 
-    $('viewer-next').addEventListener('click', () => {
-      const items = STATE.objects.filter(o => o.type === '3d');
-      if (!items.length) return;
-      STATE.viewer3dIndex = (STATE.viewer3dIndex + 1) % items.length;
-      loadViewer3d(items[STATE.viewer3dIndex]);
-    });
 
     $('lightbox').addEventListener('click', e => {
       if (e.target === $('lightbox') || e.target === $('lightbox-close') || e.target.closest('.lightbox-close')) {
@@ -2181,7 +2221,7 @@ if (articleArea) {
     if (savedTheme !== 'light') {
       STATE.isDark = true;
       document.documentElement.classList.add('dark');
-      ['theme-icon', 'wiki-theme-icon', 'wiki-theme-icon-mobile', 'viewer-theme-icon', 'neuro-theme-icon', 'map-theme-icon'].forEach(id => {
+      ['theme-icon', 'wiki-theme-icon', 'wiki-theme-icon-mobile', 'viewer-theme-icon', 'neuro-theme-icon', 'neuro-theme-icon-mobile', 'map-theme-icon'].forEach(id => {
         const el = $(id);
         if (el) el.textContent = 'light_mode';
       });
