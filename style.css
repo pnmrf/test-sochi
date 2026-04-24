@@ -402,6 +402,8 @@ html.dark .tab-indicator {
 #map-container {
   position: absolute;
   inset: 0;
+  top: calc(-1 * env(safe-area-inset-top));
+  bottom: calc(-1 * env(safe-area-inset-bottom));
   z-index: 1;
 }
 
@@ -494,8 +496,9 @@ html.dark .tab-indicator {
 .map-controls {
   position: absolute;
   right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: calc(var(--tab-h) + 16px);
+  top: auto;
+  transform: none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -579,7 +582,7 @@ html.dark .mc-divider {
 .legend-panel {
   position: absolute;
   right: 76px;
-  bottom: calc(var(--tab-h) + 20px);
+  bottom: calc(var(--tab-h) + 16px);
   left: auto;
   transform: none;
   width: calc(100% - 32px);
@@ -2620,13 +2623,13 @@ model-viewer.annotations-visible button[slot] {
 
 /* ── WIKI FILTER BAR ── */
 .wiki-filter-bar {
+  display: none !important;
   position: absolute;
   bottom: 12px;
   left: 12px;
   width: var(--sidebar-w);
   height: 56px;
   border-radius: var(--radius-lg);
-  display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 4px;
@@ -2737,18 +2740,121 @@ model-viewer.annotations-visible button[slot] {
   }
 }
 
+.wa-hero-wrap {
+  position: relative;
+  margin: 0 0 0;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  cursor: default;
+}
+
+.wa-hero-wrap.draggable {
+  cursor: grab;
+}
+
+.wa-hero-wrap.draggable:active {
+  cursor: grabbing;
+}
+
+.wa-gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.wa-hero-wrap.draggable .wa-gallery-arrow {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.wa-gallery-prev {
+  left: 6px;
+}
+
+.wa-gallery-next {
+  right: 6px;
+}
+
+.wa-gallery-arrow::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border-radius: 1px;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+}
+
+.wa-gallery-prev::before {
+  border-right: none;
+  border-top: none;
+  transform: translate(-25%, -50%) rotate(45deg);
+}
+
+.wa-gallery-next::before {
+  border-left: none;
+  border-bottom: none;
+  transform: translate(-75%, -50%) rotate(45deg);
+}
+
 .wa-hero {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  border-radius: var(--radius-md);
-  margin: 0 0 18px;
+  border-radius: 0;
+  margin: 0;
   background: rgba(0,0,0,0.03);
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.wa-gallery-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 0 0;
+  margin-bottom: 4px;
+}
+
+.wa-gallery-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-light);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, width 0.2s;
+  flex-shrink: 0;
+}
+
+.wa-gallery-dot.active {
+  background: var(--text);
+  width: 18px;
+  border-radius: var(--radius-pill);
+}
+
+.wa-author-side {
+  display: none;
 }
 
 .wa-inner {
-  padding: 20px 0 0;
+  padding: 12px 0 0;
 }
 
 html.dark .wa-badges .badge.restored {
@@ -2898,6 +3004,8 @@ html.dark .wa-view-btn:hover {
   .wiki-sidebar-toggle {
     display: flex;
     width: 52px;
+    height: 52px;
+    min-height: 52px;
     padding: 0;
     justify-content: center;
   }
@@ -2920,6 +3028,42 @@ html.dark .wa-view-btn:hover {
   .wiki-toggle-open-icon {
     opacity: 1 !important;
     position: static !important;
+  }
+
+  /* When sidebar is open — show full pill with theme | title | collapse */
+  #screen-wiki.wiki-sidebar-visible .wiki-sidebar-toggle {
+    width: calc(min(86vw, 320px) - 24px);
+    height: 56px;
+    min-height: 56px;
+    justify-content: space-between;
+    padding: 0 14px;
+  }
+
+  #screen-wiki.wiki-sidebar-visible .wiki-toggle-title {
+    display: block;
+  }
+
+  #screen-wiki.wiki-sidebar-visible .wiki-toggle-side.wiki-toggle-right {
+    display: flex;
+    min-width: 28px;
+    justify-content: flex-end;
+  }
+
+  #screen-wiki.wiki-sidebar-visible .wiki-toggle-side.wiki-toggle-left {
+    width: 28px;
+    min-width: 28px;
+    justify-content: flex-start;
+  }
+
+  #screen-wiki.wiki-sidebar-visible .wiki-toggle-theme-icon,
+  #screen-wiki.wiki-sidebar-visible .wiki-toggle-collapse-icon {
+    display: inline-flex !important;
+    opacity: 1;
+    position: static;
+  }
+
+  #screen-wiki.wiki-sidebar-visible .wiki-toggle-open-icon {
+    display: none !important;
   }
 
   .wiki-article {
@@ -2990,12 +3134,19 @@ html.dark .wa-view-btn:hover {
     padding-top: 0;
   }
 
-  .wa-hero {
-    aspect-ratio: 1 / 1;
-    border-radius: 0;
+  .wa-hero-wrap {
     margin: 0 -16px 0;
     width: calc(100% + 32px);
     max-width: calc(100% + 32px);
+    border-radius: 0;
+  }
+
+  .wa-hero {
+    aspect-ratio: 1 / 1;
+    border-radius: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
   }
 
   .wa-inner {
@@ -3044,6 +3195,92 @@ html.dark .wa-view-btn:hover {
     padding-top: 0;
     padding-left: calc(var(--sidebar-w) + 36px);
     scrollbar-gutter: stable;
+  }
+
+  /* ── Architect article: portrait + info split ── */
+  .architect-article .wa-hero-wrap {
+    display: flex;
+    flex-direction: row;
+    aspect-ratio: 16 / 9;
+    gap: 12px;
+    margin: 0 0 18px;
+    cursor: default !important;
+    overflow: visible;
+  }
+
+  .architect-article .wa-hero {
+    width: 50%;
+    flex-shrink: 0;
+    aspect-ratio: auto;
+    height: 100%;
+    object-position: center top;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .architect-article .wa-author-side {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 16px 20px;
+    background: rgba(0,0,0,0.04);
+    overflow-y: auto;
+    gap: 0;
+    border-radius: var(--radius-md);
+  }
+
+  .architect-article .wa-gallery-arrow {
+    display: none !important;
+  }
+
+  html.dark .architect-article .wa-author-side {
+    background: rgba(255,255,255,0.07);
+  }
+
+  .architect-article .wa-facts {
+    display: none;
+  }
+
+  .architect-article .wa-title {
+    display: none;
+  }
+
+  .architect-article .wa-actions {
+    display: none;
+  }
+
+  .architect-article .wa-gallery-dots {
+    display: none !important;
+  }
+
+  .was-name {
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 1.8vw, 1.6rem);
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .was-fact {
+    margin-bottom: 14px;
+  }
+
+  .was-label {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+  }
+
+  .was-value {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .was-value a {
+    color: var(--accent);
   }
 }
 
@@ -3132,10 +3369,11 @@ html.dark .wa-view-btn:hover {
     display: none;
   }
 
-  /* Map controls — raised so legend doesn't overlap them */
+  /* Map controls — positioned at bottom with same offset as side */
   .map-controls {
-    top: 33%;
-    transform: translateY(-50%);
+    top: auto;
+    bottom: calc(var(--tab-h) + 16px);
+    transform: none;
     gap: 1px;
     padding: 4px;
   }
@@ -3233,7 +3471,7 @@ html.dark .wa-view-btn:hover {
   }
 
   .wiki-sidebar.open ~ .wiki-filter-bar {
-    display: flex !important;
+    display: none !important;
   }
 
   /* Hide scrollbar so it doesn't overlay the hero image */

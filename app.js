@@ -1280,6 +1280,83 @@ function hideBottomSheet() {
   // ── WIKI ────────────────────────────────────
   const wikiFilters = { lost: true, d3: true, neuro: true };
 
+  let wikiGalleryImages = [];
+  let wikiGalleryIdx = 0;
+
+  function setWikiGallery(images) {
+    wikiGalleryImages = images || [];
+    wikiGalleryIdx = 0;
+    const dots = $('wa-gallery-dots');
+    const wrap = $('wa-hero-wrap');
+    if (!dots) return;
+    if (wikiGalleryImages.length <= 1) {
+      dots.innerHTML = '';
+      dots.style.display = 'none';
+      if (wrap) wrap.classList.remove('draggable');
+      return;
+    }
+    dots.style.display = '';
+    dots.innerHTML = wikiGalleryImages.map((_, i) =>
+      `<button class="wa-gallery-dot${i === 0 ? ' active' : ''}" aria-label="Фото ${i + 1}"></button>`
+    ).join('');
+    dots.querySelectorAll('.wa-gallery-dot').forEach((dot, i) => {
+      dot.addEventListener('click', () => {
+        wikiGalleryIdx = i;
+        updateWikiGalleryImage();
+      });
+    });
+    if (wrap) wrap.classList.add('draggable');
+  }
+
+  function updateWikiGalleryImage() {
+    const img = $('wa-hero');
+    if (!img || !wikiGalleryImages.length) return;
+    img.src = wikiGalleryImages[wikiGalleryIdx];
+    document.querySelectorAll('.wa-gallery-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === wikiGalleryIdx);
+    });
+  }
+
+  function initWikiGalleryDrag() {
+    const wrap = $('wa-hero-wrap');
+    if (!wrap) return;
+    let startX = 0;
+    let isDragging = false;
+    wrap.addEventListener('pointerdown', e => {
+      if (wikiGalleryImages.length <= 1) return;
+      startX = e.clientX;
+      isDragging = true;
+      wrap.setPointerCapture(e.pointerId);
+    });
+    wrap.addEventListener('pointerup', e => {
+      if (!isDragging) return;
+      isDragging = false;
+      const delta = e.clientX - startX;
+      if (Math.abs(delta) > 40) {
+        wikiGalleryIdx = delta < 0
+          ? Math.min(wikiGalleryIdx + 1, wikiGalleryImages.length - 1)
+          : Math.max(wikiGalleryIdx - 1, 0);
+        updateWikiGalleryImage();
+      }
+    });
+    wrap.addEventListener('pointercancel', () => { isDragging = false; });
+
+    const prevBtn = $('wa-gallery-prev');
+    const nextBtn = $('wa-gallery-next');
+    if (prevBtn) {
+      prevBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (wikiGalleryIdx > 0) { wikiGalleryIdx--; updateWikiGalleryImage(); }
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (wikiGalleryIdx < wikiGalleryImages.length - 1) { wikiGalleryIdx++; updateWikiGalleryImage(); }
+      });
+    }
+  }
+
   function updateCollapseIcon() {
     const icon = $('wiki-collapse-icon');
     if (!icon) return;
@@ -1334,6 +1411,9 @@ function hideBottomSheet() {
         applyWikiFilters();
       });
     });
+
+    initWikiGalleryDrag();
+    updateCollapseIcon();
   }
 
   function fillWikiList(listId, items, slugFn, titleFn, statusFn, typeFn, itemFn) {
@@ -1433,11 +1513,18 @@ function hideBottomSheet() {
   }
 
   async function renderWikiObject(obj) {
-    $('wa-hero').src = getPrimaryImage(obj);
-    $('wa-hero').style.display = '';
-    $('wa-hero').onerror = () => {
-      $('wa-hero').style.display = 'none';
-    };
+    $('wiki-article').classList.remove('architect-article');
+    const authorSide = $('wa-author-side');
+    if (authorSide) authorSide.innerHTML = '';
+
+    const galleryImages = Array.isArray(obj.gallery) && obj.gallery.length
+      ? obj.gallery
+      : (getPrimaryImage(obj) ? [getPrimaryImage(obj)] : []);
+    const firstImg = galleryImages[0] || getPrimaryImage(obj) || '';
+    $('wa-hero').src = firstImg;
+    $('wa-hero').style.display = firstImg ? '' : 'none';
+    $('wa-hero').onerror = () => { $('wa-hero').style.display = 'none'; };
+    setWikiGallery(galleryImages);
 
     $('wa-title').textContent = obj.title;
     
@@ -1492,21 +1579,21 @@ function hideBottomSheet() {
   }
 
   async function renderWikiArchitect(arch) {
+    $('wiki-article').classList.add('architect-article');
+
     $('wa-hero').src = arch.photo || '';
     $('wa-hero').style.display = '';
-    $('wa-hero').onerror = () => {
-      $('wa-hero').style.display = 'none';
-    };
+    $('wa-hero').onerror = () => { $('wa-hero').style.display = 'none'; };
+    setWikiGallery(arch.photo ? [arch.photo] : []);
 
     $('wa-title').textContent = arch.name;
-    
-    const relatedObjects = getArchitectObjects(arch.id);
 
+    const relatedObjects = getArchitectObjects(arch.id);
     const objectsHtml = relatedObjects.length
-      ? relatedObjects.map(o => `<a href="#" class="wiki-inline-object-link" data-slug="${o.wiki_slug}">${o.title}</a>`).join('<br>')
+      ? relatedObjects.map(o => `<a href="#" class="wiki-inline-object-link was-value" data-slug="${o.wiki_slug}">${o.title}</a>`).join('<br>')
       : '—';
 
-    $('wa-facts').innerHTML = `
+    const factsInnerHtml = `
       <div>
         <div class="wa-fact-label">Годы жизни</div>
         <div class="wa-fact-value">${arch.years || '—'}</div>
@@ -1516,6 +1603,29 @@ function hideBottomSheet() {
         <div class="wa-fact-value">${objectsHtml}</div>
       </div>
     `;
+    $('wa-facts').innerHTML = factsInnerHtml;
+
+    const authorSide = $('wa-author-side');
+    if (authorSide) {
+      authorSide.innerHTML = `
+        <div class="was-name">${arch.name}</div>
+        ${arch.profession ? `<div class="was-fact"><div class="was-label">Деятельность</div><div class="was-value">${arch.profession}</div></div>` : ''}
+        <div class="was-fact">
+          <div class="was-label">Годы жизни</div>
+          <div class="was-value">${arch.years || '—'}</div>
+        </div>
+        <div class="was-fact">
+          <div class="was-label">Объекты в базе</div>
+          <div class="was-value">${relatedObjects.map(o => `<a href="#" class="wiki-inline-object-link" data-slug="${o.wiki_slug}">${o.title}</a>`).join('<br>') || '—'}</div>
+        </div>
+      `;
+      authorSide.querySelectorAll('.wiki-inline-object-link').forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          openWikiArticle(link.dataset.slug, sectionForSlug(link.dataset.slug));
+        });
+      });
+    }
 
     $('wa-facts').querySelectorAll('.wiki-inline-object-link').forEach(link => {
       link.addEventListener('click', e => {
