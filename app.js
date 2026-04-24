@@ -31,6 +31,8 @@
     currentViewer3d: null,
     viewer3dIndex: 0,
     viewer3dFrom: '3d',
+    galleryPhotos: [],
+    galleryIndex: 0,
     activeTab: 'map',
     neuroFrom: 'map',
     neuroIndex: 0,
@@ -1088,14 +1090,29 @@ function setNeuroMode(mode) {
 
     } else if (type === 'gallery') {
       const photos = obj.gallery || [obj.poster_url].filter(Boolean);
-      $('vg-photos').innerHTML = photos.map(p =>
-        `<img src="${p}" alt="${obj.title}" onerror="this.style.display='none'" />`
-      ).join('');
+      STATE.galleryPhotos = photos;
+      STATE.galleryIndex = 0;
 
-      $('vg-photos').querySelectorAll('img').forEach(img => {
-        img.addEventListener('click', () => openLightbox(img.src));
-      });
+      function updateGallerySlide() {
+        const p = STATE.galleryPhotos[STATE.galleryIndex];
+        $('vg-photo').src = p || '';
+        $('vg-photo').alt = obj.title;
+        $('vg-counter').textContent = `${STATE.galleryIndex + 1} / ${STATE.galleryPhotos.length}`;
+        const navRow = $('vg-nav-row');
+        if (navRow) navRow.style.display = STATE.galleryPhotos.length > 1 ? '' : 'none';
+      }
 
+      $('vg-prev').onclick = () => {
+        STATE.galleryIndex = (STATE.galleryIndex - 1 + STATE.galleryPhotos.length) % STATE.galleryPhotos.length;
+        updateGallerySlide();
+      };
+      $('vg-next').onclick = () => {
+        STATE.galleryIndex = (STATE.galleryIndex + 1) % STATE.galleryPhotos.length;
+        updateGallerySlide();
+      };
+      $('vg-photo').onclick = () => openLightbox(STATE.galleryPhotos[STATE.galleryIndex]);
+
+      updateGallerySlide();
       openBottomSheet($('viewer-gallery-sheet'));
 
     } else if (type === 'ar') {
@@ -1947,7 +1964,35 @@ if (wikiCollapseBtn) {
     });
 
     $('va-info').addEventListener('click', () => openViewerSheet('info'));
-    $('va-article').addEventListener('click', () => openViewerSheet('article'));
+    $('vi-btn-more').addEventListener('click', () => {
+      const obj = STATE.currentViewer3d;
+      if (obj) openViewerArticle(obj);
+    });
+
+    // Свайп в галерее
+    let _galSwipeX = 0;
+    const carousel = $('vg-carousel');
+    if (carousel) {
+      carousel.addEventListener('touchstart', e => { _galSwipeX = e.touches[0].clientX; }, { passive: true });
+      carousel.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - _galSwipeX;
+        if (Math.abs(dx) < 40 || !STATE.galleryPhotos.length) return;
+        STATE.galleryIndex = dx < 0
+          ? (STATE.galleryIndex + 1) % STATE.galleryPhotos.length
+          : (STATE.galleryIndex - 1 + STATE.galleryPhotos.length) % STATE.galleryPhotos.length;
+        $('vg-photo').src = STATE.galleryPhotos[STATE.galleryIndex] || '';
+        $('vg-counter').textContent = `${STATE.galleryIndex + 1} / ${STATE.galleryPhotos.length}`;
+      });
+    }
+
+    $('va-reset').addEventListener('click', () => {
+      const mv = $('model-viewer');
+      mv.cameraOrbit = '0deg 75deg 105%';
+      mv.fieldOfView = '30deg';
+      if (mv.resetTurntableRotation) mv.resetTurntableRotation(0);
+      document.querySelectorAll('.va-btn').forEach(b => b.classList.remove('active'));
+      hideBottomSheet();
+    });
     $('va-gallery').addEventListener('click', () => openViewerSheet('gallery'));
     $('va-ar').addEventListener('click', () => openViewerSheet('ar'));
 

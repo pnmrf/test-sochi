@@ -318,6 +318,8 @@
         alt="3D модель"
         camera-controls
         auto-rotate
+        ar
+        ar-modes="webxr scene-viewer quick-look"
         shadow-intensity="1"
         environment-image="neutral"
         loading="lazy"
@@ -332,8 +334,8 @@
           <button class="va-btn" id="va-gallery" aria-label="Галерея">
             <span class="material-symbols-outlined">photo_library</span>
           </button>
-          <button class="va-btn" id="va-article" aria-label="Статья">
-            <span class="material-symbols-outlined">menu_book</span>
+          <button class="va-btn" id="va-reset" aria-label="Начальный ракурс">
+            <span class="material-symbols-outlined">3d_rotation</span>
           </button>
           <button class="va-btn" id="va-ar" aria-label="AR">
             <span class="material-symbols-outlined">view_in_ar</span>
@@ -355,6 +357,10 @@
         <div class="bs-content">
           <h2 id="vi-title" class="bs-title"></h2>
           <div id="vi-facts" class="vi-facts"></div>
+          <button id="vi-btn-more" class="btn-glass vi-btn-more">
+            <span class="material-symbols-outlined">menu_book</span>
+            Подробнее
+          </button>
         </div>
       </div>
 
@@ -369,8 +375,18 @@
       <div id="viewer-gallery-sheet" class="bottom-sheet glass hidden">
         <div class="bs-handle-wrap"><div class="bs-handle"></div></div>
         <div class="bs-content">
-          <h3 class="bs-title">Галерея</h3>
-          <div id="vg-photos" class="vg-photos"></div>
+          <h3 class="bs-title">Галерея <span id="vg-counter" class="vg-counter"></span></h3>
+          <div class="vg-carousel" id="vg-carousel">
+            <img id="vg-photo" src="" alt="" decoding="async" />
+          </div>
+          <div class="vg-nav-row" id="vg-nav-row">
+            <button class="vg-nav-btn" id="vg-prev" aria-label="Предыдущее фото">
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <button class="vg-nav-btn" id="vg-next" aria-label="Следующее фото">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
         </div>
       </div>
 
