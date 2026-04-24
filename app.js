@@ -104,12 +104,20 @@
   function renderItemTags(containerId, item) {
     const container = $(containerId);
     if (!container) return;
-    const tags = [];
+    const parts = [];
     const year = getItemYear(item);
-    if (year) tags.push(year);
-    getAuthors(item).forEach(a => tags.push(a.name));
-    container.innerHTML = tags.map(t => `<span class="sc-tag">${t}</span>`).join('');
-    container.style.display = tags.length ? '' : 'none';
+    if (year) parts.push(`<span class="sc-tag">${year}</span>`);
+    getAuthors(item).forEach(a => {
+      parts.push(`<button class="sc-tag sc-tag-author" type="button" data-slug="${a.wiki_slug || ''}">${a.name}</button>`);
+    });
+    container.innerHTML = parts.join('');
+    container.querySelectorAll('.sc-tag-author').forEach(btn => {
+      if (btn.dataset.slug) btn.addEventListener('click', e => {
+        e.stopPropagation();
+        openWikiArticle(btn.dataset.slug, 'architects');
+      });
+    });
+    container.style.display = parts.length ? '' : 'none';
   }
 
   function isNeuro(item) {
@@ -2048,9 +2056,15 @@ if (articleArea) {
       }
 
       handle.addEventListener('touchstart', e => startDrag(e.touches[0].clientY), { passive: true });
+      legend.addEventListener('touchstart', e => {
+        if (!e.target.closest('label, input, .toggle-track')) startDrag(e.touches[0].clientY);
+      }, { passive: true });
       handle.addEventListener('touchmove', e => { moveDrag(e.touches[0].clientY); e.preventDefault(); }, { passive: false });
+      legend.addEventListener('touchmove', e => { if (dragging) { moveDrag(e.touches[0].clientY); e.preventDefault(); } }, { passive: false });
       handle.addEventListener('touchend', endDrag);
+      legend.addEventListener('touchend', endDrag);
       handle.addEventListener('touchcancel', endDrag);
+      legend.addEventListener('touchcancel', endDrag);
       handle.addEventListener('mousedown', e => { e.preventDefault(); startDrag(e.clientY); });
       window.addEventListener('mousemove', e => moveDrag(e.clientY));
       window.addEventListener('mouseup', endDrag);

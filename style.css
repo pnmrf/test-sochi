@@ -258,6 +258,7 @@ html.dark .glass {
   pointer-events: auto;
   flex-shrink: 0;
   opacity: 0.85;
+  margin-left: 8px;
   transition: opacity var(--transition);
 }
 
@@ -809,6 +810,23 @@ html.dark .sc-text-card {
 html.dark .sc-tag {
   background: rgba(255,255,255,0.11);
   color: #B8BEC8;
+}
+
+.sc-tag-author {
+  color: var(--accent);
+  background: rgba(74, 158, 224, 0.10);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: background var(--transition);
+}
+
+.sc-tag-author:hover {
+  background: rgba(74, 158, 224, 0.20);
+}
+
+html.dark .sc-tag-author {
+  background: rgba(74, 158, 224, 0.14);
+  color: var(--accent);
 }
 
 .sc-title {
@@ -2876,9 +2894,9 @@ html.dark .wa-view-btn:hover {
     display: none;
   }
 
-  /* Map controls — near center but higher so legend has room */
+  /* Map controls — raised so legend doesn't overlap them */
   .map-controls {
-    top: 40%;
+    top: 33%;
     transform: translateY(-50%);
     gap: 1px;
     padding: 4px;
@@ -2904,7 +2922,7 @@ html.dark .wa-view-btn:hover {
     max-width: none !important;
     width: 100% !important;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
-    padding: 0 16px calc(var(--tab-h) + env(safe-area-inset-bottom) + 32px) !important;
+    padding: 0 20px calc(var(--tab-h) + env(safe-area-inset-bottom) + 28px) !important;
     transform: translateY(0) !important;
     opacity: 1 !important;
     transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1) !important;
@@ -2913,6 +2931,57 @@ html.dark .wa-view-btn:hover {
   .legend-panel.hidden {
     transform: translateY(100%) !important;
     opacity: 1 !important;
+  }
+
+  /* Legend larger on mobile */
+  .legend-title {
+    font-size: 11px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .legend-item {
+    font-size: 15px !important;
+    gap: 14px !important;
+    padding: 8px 8px !important;
+    margin: 0 -8px !important;
+  }
+
+  .legend-dot {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .toggle-track {
+    width: 44px !important;
+    height: 24px !important;
+  }
+
+  .toggle-thumb {
+    width: 18px !important;
+    height: 18px !important;
+    top: 3px !important;
+    left: 3px !important;
+  }
+
+  .legend-item input:checked ~ .toggle-track .toggle-thumb {
+    transform: translateX(20px) !important;
+  }
+
+  .legend-handle-wrap {
+    padding: 14px 0 6px !important;
+  }
+
+  .legend-handle {
+    width: 44px !important;
+    height: 5px !important;
+  }
+
+  .legend-items {
+    gap: 4px !important;
+  }
+
+  .legend-divider {
+    margin: 12px 0 !important;
   }
 
   /* Wiki filter bar — only when sidebar is open on mobile */
@@ -2955,6 +3024,10 @@ html.dark .wa-view-btn:hover {
   }
 
   .tab-bar {
+    max-width: 420px;
+  }
+
+  .map-topbar {
     max-width: 420px;
   }
 
