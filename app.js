@@ -251,6 +251,9 @@
   // ── MAP ─────────────────────────────────────
   function initMap() {
     loadData().then(() => {
+      // Рендерим боковую галерею нейрохроник для десктопа
+      renderNeuroGalleryList();
+
       const container = $('map-container');
 
       STATE.map = new maplibregl.Map({
@@ -704,6 +707,15 @@
     // Обновить боковую панель
     updateNeuroSidebar();
 
+    // Десктоп: подсветить активную карточку в галерее и обновить лейбл
+    updateNeuroGalleryActive();
+    const dtTitle = $('neuro-desktop-title');
+    const dtYear  = $('neuro-desktop-year');
+    const dtLabel = $('neuro-desktop-label');
+    if (dtTitle) dtTitle.textContent = obj.title || '';
+    if (dtYear)  dtYear.textContent  = obj.year  || '';
+    if (dtLabel) dtLabel.classList.add('visible');
+
     STATE.activeTab = 'neuro';
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'neuro'));
     updateTabIndicator();
@@ -886,6 +898,54 @@ function toggleNeuroEyeMode() {
     }
   }
 
+  // ── NEURO GALLERY LIST (desktop sidebar) ──────────
+  function renderNeuroGalleryList() {
+    const list = $('neuro-gallery-list');
+    if (!list) return;
+
+    list.innerHTML = STATE.neurochronicles.map((nc, idx) => {
+      const colorSrc = nc.photo_restored || nc.photo_original || '';
+      const bwSrc    = nc.photo_original  || nc.photo_restored  || '';
+      const title    = nc.title || `Нейрохроника ${idx + 1}`;
+      const year     = nc.year  || '';
+      return `<button class="ngal-card" data-neuro-idx="${idx}" aria-label="${title}">
+        <div class="ngal-card-thumb">
+          <img class="ngal-img-bw"    src="${bwSrc}"    alt="" loading="lazy" decoding="async"
+               onerror="this.onerror=null;this.src='assets/photos/placeholder.webp'" />
+          <img class="ngal-img-color" src="${colorSrc}" alt="" loading="lazy" decoding="async"
+               onerror="this.onerror=null;this.src='assets/photos/placeholder.webp'" />
+        </div>
+        <div class="ngal-meta">
+          <span class="ngal-title">${title}</span>
+          <span class="ngal-year">${year}</span>
+        </div>
+      </button>`;
+    }).join('');
+
+    // Клик по карточке — открыть нейрохронику
+    list.addEventListener('click', e => {
+      const card = e.target.closest('.ngal-card');
+      if (!card) return;
+      const idx = parseInt(card.dataset.neuroIdx, 10);
+      if (isNaN(idx)) return;
+      STATE.neuroCompareMode = false;
+      openNeuro(STATE.neurochronicles[idx], STATE.neuroFrom || 'map', false, false);
+    });
+
+    // Нативный скролл — браузер обрабатывает колёсико сам,
+    // плавнее любого ручного перехвата событий.
+  }
+
+  function updateNeuroGalleryActive() {
+    const list = $('neuro-gallery-list');
+    if (!list) return;
+    list.querySelectorAll('.ngal-card').forEach((card, i) => {
+      card.classList.toggle('active', i === STATE.neuroIndex);
+    });
+    const active = list.querySelector('.ngal-card.active');
+    if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
 function setNeuroMode(mode) {
   const compare = $('neuro-compare');
   const restored = $('neuro-img-restored');
@@ -1020,19 +1080,38 @@ function setNeuroMode(mode) {
         <div class="gallery-card-year">${obj.year || ''}</div>
       </div>`;
 
+    // Одно нажатие — сразу открываем нейрохронику
     card.addEventListener('click', () => {
-      if (window.innerWidth <= 767 && !card.classList.contains('revealed')) {
-        document.querySelectorAll('.neuro-gallery-card.revealed')
-          .forEach(c => c.classList.remove('revealed'));
-        card.classList.add('revealed');
-      } else {
-        STATE.neuroCompareMode = false;
-        openNeuro(obj, 'neuro');
-      }
+      STATE.neuroCompareMode = false;
+      openNeuro(obj, 'neuro');
     });
 
     grid.appendChild(card);
   });
+
+  // Мобиле: расцвечиваем карточку ближайшую к центру экрана при скролле
+  if (window.innerWidth <= 767) {
+    const container = $('screen-neuro-gallery');
+
+    function revealCenteredCard() {
+      const centerY = window.innerHeight / 2;
+      const cards = grid.querySelectorAll('.neuro-gallery-card');
+      let closest = null, minDist = Infinity;
+
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.top + rect.height / 2;
+        const dist = Math.abs(cardCenter - centerY);
+        if (dist < minDist) { minDist = dist; closest = card; }
+      });
+
+      cards.forEach(card => card.classList.toggle('revealed', card === closest));
+    }
+
+    container?.addEventListener('scroll', revealCenteredCard, { passive: true });
+    // Инициализируем сразу — первая карточка расцвечена
+    requestAnimationFrame(revealCenteredCard);
+  }
 }
 
   // ── 3D GALLERY ─────────────────────────────

@@ -1612,24 +1612,68 @@ html.dark .neuro-sidebar {
     display: none;
   }
 
-  /* Sidebar — оставляем место снизу под панель управления */
+  /* ── Сайдбар — прозрачный контейнер ─────────────────────────── */
+  /*
+     Раскладка (сверху вниз), всё фиксировано по left: 12px, width: 320px:
+     top: 24px ──── [Пилюля: ← В ГАЛЕРЕЮ ☀️]  56px
+     top: 88px ──── [neuro-controls]            56px
+     top: 152px ─── [сайдбар / галерея]         flex
+     bottom: 86px ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+     bottom: 22px ── [neuro-btn-map]             56px
+  */
   .neuro-sidebar {
-    top: 24px;
-    bottom: calc(22px + env(safe-area-inset-bottom) + 56px + 8px);
+    top: 152px;                                  /* под пилюлей + controls + зазоры */
+    bottom: 86px;                                /* над кнопкой карты */
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: none;
   }
 
-  /* Close button shows on desktop as back-to-gallery */
+  html.dark .neuro-sidebar {
+    background: transparent;
+    border: none;
+  }
+
+  /* ── Пилюля-шапка: ← В ГАЛЕРЕЮ ☀️ ──────────────────────────── */
+  .neuro-sidebar .ws-header {
+    position: fixed;
+    top: 24px;
+    left: 12px;
+    width: 320px;
+    height: 56px;
+    margin: 0;
+    padding: 0 8px;
+    box-sizing: border-box;
+    z-index: 1053;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow);
+  }
+
+  html.dark .neuro-sidebar .ws-header {
+    border: 1px solid rgba(255,255,255,0.18);
+    border-top: 1px solid rgba(255,255,255,0.28);
+    border-left: 1px solid rgba(255,255,255,0.22);
+  }
+
+  /* Back button visible on desktop */
   #neuro-sidebar-close {
     display: flex;
   }
 
-  /* Панель управления — левый нижний угол, выровнена по левому краю сайдбара и по высоте таб-бара */
+  /* ── Панель управления поднимается наверх ────────────────────── */
   .neuro-controls {
     left: 12px;
     transform: none;
     width: 320px;
     min-width: unset;
-    bottom: calc(22px + env(safe-area-inset-bottom));
+    bottom: auto;
+    top: 88px;                                   /* 24px + 56px + 8px */
     height: 56px;
     border-radius: var(--radius-lg);
     border-top: none;
@@ -1637,11 +1681,55 @@ html.dark .neuro-sidebar {
     box-shadow: var(--glass-shadow);
   }
 
+  /* eye-mode: контролы уходят вниз как плавающая пилюля */
   #screen-neuro.eye-mode .neuro-controls {
+    top: auto;
+    bottom: 20px;
     left: 20px;
     transform: none;
     width: 360px;
     min-width: unset;
+  }
+
+  /* ── Кнопка «Смотреть на карте» — фиксированная пилюля внизу ── */
+  .ns-map-btn-wrap {
+    position: fixed;
+    bottom: 22px;
+    left: 12px;
+    width: 320px;
+    height: 56px;
+    padding: 0;
+    flex-direction: row;
+    box-sizing: border-box;
+    z-index: 1050;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow);
+  }
+
+  html.dark .ns-map-btn-wrap {
+    border: 1px solid rgba(255,255,255,0.18);
+    border-top: 1px solid rgba(255,255,255,0.28);
+    border-left: 1px solid rgba(255,255,255,0.22);
+  }
+
+  .ns-map-btn-wrap .ns-map-btn {
+    width: 100%;
+    height: 100%;
+    padding: 0 20px;
+    border: none;
+    border-radius: var(--radius-lg);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .ns-map-btn-wrap .ns-map-btn:hover {
+    background: rgba(74,158,224,0.10);
+    color: var(--accent);
+    box-shadow: none;
   }
 }
 
@@ -1779,6 +1867,186 @@ html.dark .neuro-sidebar {
 /* ── 10.7 NEURO OVERLAY ── */
 .neuro-overlay {
   display: none;
+}
+
+/* ── 10.8 NEURO GALLERY LIST (десктопный сайдбар) ── */
+.neuro-gallery-list {
+  display: none; /* скрыт на мобиле */
+}
+
+@media (min-width: 768px) {
+  .neuro-gallery-list {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 52px 12px;
+    gap: 10px;
+    scrollbar-width: none;
+    /* Fade-маска: карточки уходят под панели сверху и снизу */
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0px,
+      black 52px,
+      black calc(100% - 52px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0px,
+      black 52px,
+      black calc(100% - 52px),
+      transparent 100%
+    );
+  }
+
+  .neuro-gallery-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* На десктопе показываем галерею, скрываем текстовую инфо-секцию */
+  .neuro-sidebar .ns-info-section {
+    display: none;
+  }
+}
+
+/* ── Карточка в боковой галерее ── */
+.ngal-card {
+  flex-shrink: 0;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.ngal-card:hover {
+  transform: scale(1.015);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+}
+
+.ngal-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 4px 18px rgba(74,158,224,0.22);
+}
+
+.ngal-card-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.ngal-card-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.28s ease;
+}
+
+/* Цветное фото — поверх, изначально прозрачное */
+.ngal-img-color {
+  z-index: 2;
+  opacity: 0;
+}
+
+/* Ч/б — снизу, всегда видно */
+.ngal-img-bw {
+  z-index: 1;
+  filter: grayscale(100%);
+  opacity: 1;
+}
+
+/* При наведении или активном: цвет проступает */
+.ngal-card:hover .ngal-img-color,
+.ngal-card.active .ngal-img-color {
+  opacity: 1;
+}
+
+.ngal-meta {
+  padding: 7px 10px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.ngal-title {
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.ngal-year {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-style: italic;
+}
+
+/* ── 10.9 NEURO DESKTOP LABEL (верх-право) ── */
+.neuro-desktop-label {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .neuro-desktop-label {
+    display: block;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1051;
+    text-align: right;
+    pointer-events: none;
+    padding: 12px 18px 14px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow);
+    max-width: 300px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .neuro-desktop-label.visible {
+    opacity: 1;
+  }
+
+  .neuro-desktop-title {
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.25;
+    margin-bottom: 4px;
+  }
+
+  .neuro-desktop-year {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  /* В eye-mode лейбл скрываем — там своя подпись поверх фото */
+  #screen-neuro.eye-mode .neuro-desktop-label {
+    display: none;
+  }
 }
 
 /* ── 11. BOTTOM SHEET ── */
