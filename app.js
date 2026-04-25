@@ -1011,6 +1011,7 @@ function setNeuroMode(mode) {
     });
 
     divider.addEventListener('touchstart', e => {
+      if (e.touches.length >= 2) return; // pinch — игнорируем
       sliderDragging = true;
       e.preventDefault();
       setPos(e.touches[0].clientX);
@@ -1026,6 +1027,7 @@ function setNeuroMode(mode) {
 
     container.addEventListener('touchstart', e => {
       if (e.target.closest('.neuro-divider')) return;
+      if (e.touches.length >= 2) return; // pinch — игнорируем
       sliderDragging = true;
       setPos(e.touches[0].clientX);
     }, { passive: true });
@@ -1036,7 +1038,9 @@ function setNeuroMode(mode) {
     });
 
     window.addEventListener('touchmove', e => {
-      if (sliderDragging) setPos(e.touches[0].clientX);
+      if (!sliderDragging) return;
+      if (e.touches.length >= 2) { sliderDragging = false; return; } // начался пинч
+      setPos(e.touches[0].clientX);
     });
 
     // End
@@ -2229,6 +2233,11 @@ if (wikiCollapseBtn) {
 
       function _nApply() {
         neuroFrame.style.transform = `translate(${_nTranslateX}px, ${_nTranslateY}px) scale(${_neuroScale})`;
+        // Counter-scale слайдера: стрелки и линия остаются одного размера при зуме
+        const divider = $('neuro-divider');
+        if (divider) {
+          divider.style.setProperty('--divider-cs', 1 / _neuroScale);
+        }
       }
 
       function _nClamp() {
@@ -2301,6 +2310,9 @@ if (wikiCollapseBtn) {
             _nTranslateX = 0;
             _nTranslateY = 0;
             neuroFrame.style.transform = '';
+            // Сбрасываем counter-scale слайдера
+            const divider = $('neuro-divider');
+            if (divider) divider.style.removeProperty('--divider-cs');
           }
         }
       });

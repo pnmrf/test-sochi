@@ -1238,7 +1238,8 @@ html.dark .btn-glass:hover {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 2px;
+  width: calc(2px * var(--divider-cs, 1));
+  min-width: 1px;
   background: rgba(255, 255, 255, 0.9);
 }
 
@@ -1246,7 +1247,7 @@ html.dark .btn-glass:hover {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(var(--divider-cs, 1));
   width: 2px;
   height: 48px;
   background: transparent;
@@ -1312,7 +1313,8 @@ html.dark .btn-glass:hover {
 .neuro-divider::before {
   right: 100%;
   margin-right: 6px;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(var(--divider-cs, 1));
+  transform-origin: right center;
   border-width: 6px 7px 6px 0;
   border-color: transparent white transparent transparent;
 }
@@ -1321,7 +1323,8 @@ html.dark .btn-glass:hover {
 .neuro-divider::after {
   left: 100%;
   margin-left: 6px;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(var(--divider-cs, 1));
+  transform-origin: left center;
   border-width: 6px 0 6px 7px;
   border-color: transparent transparent transparent white;
 }
@@ -1616,13 +1619,14 @@ html.dark .neuro-sidebar {
   /*
      Раскладка (сверху вниз), всё фиксировано по left: 12px, width: 320px:
      top: 24px ──── [Пилюля: ← В ГАЛЕРЕЮ ☀️]  56px
-     top: 88px ──── [neuro-controls]            56px
-     top: 152px ─── [сайдбар / галерея]         flex
+     top: 88px ──── [сайдбар / галерея]         flex
      bottom: 86px ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
      bottom: 22px ── [neuro-btn-map]             56px
+
+     [neuro-controls] — внизу по центру страницы (bottom: 20px, centered)
   */
   .neuro-sidebar {
-    top: 152px;                                  /* под пилюлей + controls + зазоры */
+    top: 88px;                                   /* прямо под пилюлей */
     bottom: 86px;                                /* над кнопкой карты */
     background: transparent;
     backdrop-filter: none;
@@ -1666,14 +1670,14 @@ html.dark .neuro-sidebar {
     display: flex;
   }
 
-  /* ── Панель управления поднимается наверх ────────────────────── */
+  /* ── Панель управления — внизу по центру (как таббар) ────────── */
   .neuro-controls {
-    left: 12px;
-    transform: none;
-    width: 320px;
-    min-width: unset;
-    bottom: auto;
-    top: 88px;                                   /* 24px + 56px + 8px */
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    min-width: 340px;
+    bottom: 20px;
+    top: auto;
     height: 56px;
     border-radius: var(--radius-lg);
     border-top: none;
@@ -1681,14 +1685,14 @@ html.dark .neuro-sidebar {
     box-shadow: var(--glass-shadow);
   }
 
-  /* eye-mode: контролы уходят вниз как плавающая пилюля */
+  /* eye-mode: контролы остаются внизу по центру */
   #screen-neuro.eye-mode .neuro-controls {
     top: auto;
     bottom: 20px;
-    left: 20px;
-    transform: none;
-    width: 360px;
-    min-width: unset;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    min-width: 340px;
   }
 
   /* ── Кнопка «Смотреть на карте» — фиксированная пилюля внизу ── */
@@ -1724,12 +1728,19 @@ html.dark .neuro-sidebar {
     border-radius: var(--radius-lg);
     background: transparent;
     box-shadow: none;
+    transition: color var(--transition);
   }
 
-  .ns-map-btn-wrap .ns-map-btn:hover {
-    background: rgba(74,158,224,0.10);
-    color: var(--accent);
-    box-shadow: none;
+  /* Hover — вся плашка становится синей (как в разделе вики) */
+  .ns-map-btn-wrap:hover {
+    background: var(--accent);
+    border-color: transparent;
+    box-shadow: 0 2px 12px rgba(74,158,224,0.35);
+  }
+
+  .ns-map-btn-wrap:hover .ns-map-btn {
+    color: white;
+    background: transparent;
   }
 }
 
@@ -2041,6 +2052,12 @@ html.dark .neuro-sidebar {
     color: var(--text-muted);
     font-size: 13px;
     font-style: italic;
+  }
+
+  /* Тёмная тема: убираем прозрачность, делаем читаемый фон */
+  html.dark .neuro-desktop-label {
+    background: rgba(20, 21, 23, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.14);
   }
 
   /* В eye-mode лейбл скрываем — там своя подпись поверх фото */
@@ -4072,14 +4089,10 @@ html.dark .wa-view-btn:hover {
 }
 
 /* ── Tab bar в режиме нейрохроник ── */
-/* Десктоп: слегка прозрачный */
+/* Десктоп: скрываем полностью — контролы переехали в нижний центр */
 @media (min-width: 768px) {
   #app.neuro-active .tab-bar {
-    opacity: 0.35 !important;
-    transition: opacity 0.3s ease;
-  }
-  #app.neuro-active .tab-bar:hover {
-    opacity: 1 !important;
+    display: none !important;
   }
 }
 /* Мобайл: скрыт полностью, вместо него — neuro-controls */
