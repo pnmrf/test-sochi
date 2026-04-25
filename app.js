@@ -641,7 +641,6 @@
     const imgEl = $('neuro-img-restored');
     imgEl.onload = null;
     imgEl.src = obj.photo_restored || '';
-    imgEl.style.transform = '';
     imgEl.style.filter = '';
     _neuroScale = 1;
     _nTranslateX = 0;
@@ -649,7 +648,10 @@
     STATE.neuroBwMode = false;
     $('neuro-btn-bw')?.classList.remove('active');
     const frame = $('neuro-frame');
-    if (frame) frame.style.aspectRatio = '';
+    if (frame) {
+      frame.style.transform = '';
+      frame.style.aspectRatio = '';
+    }
 
     // BW/Color загружаем только в compare mode — иначе лишний трафик
     if (STATE.neuroCompareMode) {
@@ -893,9 +895,6 @@ function setNeuroMode(mode) {
     if (STATE.neuroCompareMode) {
       compareBtn.classList.remove('active');
       show(restored);
-      if (_neuroScale > 1) {
-        restored.style.transform = `translate(${_nTranslateX}px, ${_nTranslateY}px) scale(${_neuroScale})`;
-      }
       hide(compare);
       STATE.neuroCompareMode = false;
       return;
@@ -2125,7 +2124,7 @@ if (wikiCollapseBtn) {
       });
     }
 
-    // Pinch-to-zoom и pan для мобильного просмотра нейрохроник
+    // Pinch-to-zoom + pan для мобильного просмотра нейрохроник (iOS-style)
     const neuroFrame = $('neuro-frame');
     if (neuroFrame) {
       let _nPinching = false;
@@ -2136,6 +2135,8 @@ if (wikiCollapseBtn) {
       let _nPanStartY = 0;
       let _nBasePanX = 0;
       let _nBasePanY = 0;
+      let _nGestureMidX = 0;
+      let _nGestureMidY = 0;
 
       function _nDist(t) {
         const dx = t[0].clientX - t[1].clientX;
@@ -2143,20 +2144,36 @@ if (wikiCollapseBtn) {
         return Math.sqrt(dx * dx + dy * dy);
       }
 
-      function _nApply(img) {
-        img.style.transform = `translate(${_nTranslateX}px, ${_nTranslateY}px) scale(${_neuroScale})`;
+      function _nMid(t) {
+        return { x: (t[0].clientX + t[1].clientX) / 2, y: (t[0].clientY + t[1].clientY) / 2 };
+      }
+
+      function _nApply() {
+        neuroFrame.style.transform = `translate(${_nTranslateX}px, ${_nTranslateY}px) scale(${_neuroScale})`;
+      }
+
+      function _nClamp() {
+        const maxX = (neuroFrame.clientWidth * (_neuroScale - 1)) / 2;
+        const maxY = (neuroFrame.clientHeight * (_neuroScale - 1)) / 2;
+        _nTranslateX = Math.min(maxX, Math.max(-maxX, _nTranslateX));
+        _nTranslateY = Math.min(maxY, Math.max(-maxY, _nTranslateY));
       }
 
       neuroFrame.addEventListener('touchstart', e => {
-        if (e.touches.length === 2) {
+        if (e.touches.length >= 2) {
+          // Двупальцевый жест: одновременно pinch + pan по midpoint (как на iOS)
           _nPinching = true;
           _nPanning = false;
           _nInitDist = _nDist(e.touches);
           _nBaseScale = _neuroScale;
+          const mid = _nMid(e.touches);
+          _nGestureMidX = mid.x;
+          _nGestureMidY = mid.y;
           _nBasePanX = _nTranslateX;
           _nBasePanY = _nTranslateY;
           e.preventDefault();
-        } else if (e.touches.length === 1 && _neuroScale > 1 && !STATE.neuroCompareMode) {
+        } else if (e.touches.length === 1 && _neuroScale > 1) {
+          // Однопальцевый pan в режиме зума
           _nPanning = true;
           _nPanStartX = e.touches[0].clientX;
           _nPanStartY = e.touches[0].clientY;
@@ -2167,39 +2184,46 @@ if (wikiCollapseBtn) {
       }, { passive: false });
 
       neuroFrame.addEventListener('touchmove', e => {
-        if (_nPinching && e.touches.length === 2) {
+        if (e.touches.length >= 2 && _nPinching) {
           e.preventDefault();
-          if (!STATE.neuroCompareMode) {
-            const dist = _nDist(e.touches);
-            _neuroScale = Math.min(4, Math.max(1, _nBaseScale * (dist / _nInitDist)));
-            const img = $('neuro-img-restored');
-            if (img) _nApply(img);
-          }
-        } else if (_nPanning && e.touches.length === 1 && _neuroScale > 1) {
+          const dist = _nDist(e.touches);
+          _neuroScale = Math.min(4, Math.max(1, _nBaseScale * (dist / _nInitDist)));
+          // Midpoint tracking: движение двух пальцев = pan
+          const mid = _nMid(e.touches);
+          _nTranslateX = _nBasePanX + (mid.x - _nGestureMidX);
+          _nTranslateY = _nBasePanY + (mid.y - _nGestureMidY);
+          _nClamp();
+          _nApply();
+        } else if (e.touches.length === 1 && _nPanning && _neuroScale > 1) {
           e.preventDefault();
-          const dx = e.touches[0].clientX - _nPanStartX;
-          const dy = e.touches[0].clientY - _nPanStartY;
-          const maxX = (neuroFrame.clientWidth * (_neuroScale - 1)) / 2;
-          const maxY = (neuroFrame.clientHeight * (_neuroScale - 1)) / 2;
-          _nTranslateX = Math.min(maxX, Math.max(-maxX, _nBasePanX + dx));
-          _nTranslateY = Math.min(maxY, Math.max(-maxY, _nBasePanY + dy));
-          const img = $('neuro-img-restored');
-          if (img) _nApply(img);
+          _nTranslateX = _nBasePanX + (e.touches[0].clientX - _nPanStartX);
+          _nTranslateY = _nBasePanY + (e.touches[0].clientY - _nPanStartY);
+          _nClamp();
+          _nApply();
         }
       }, { passive: false });
 
       neuroFrame.addEventListener('touchend', e => {
-        if (_nPinching && e.touches.length < 2) {
+        if (e.touches.length < 2) {
           _nPinching = false;
+          // Плавный переход с двух пальцев на один — продолжаем pan
+          if (e.touches.length === 1 && _neuroScale > 1) {
+            _nPanning = true;
+            _nPanStartX = e.touches[0].clientX;
+            _nPanStartY = e.touches[0].clientY;
+            _nBasePanX = _nTranslateX;
+            _nBasePanY = _nTranslateY;
+          }
+        }
+        if (e.touches.length === 0) {
+          _nPanning = false;
           if (_neuroScale <= 1) {
             _neuroScale = 1;
             _nTranslateX = 0;
             _nTranslateY = 0;
-            const img = $('neuro-img-restored');
-            if (img) img.style.transform = '';
+            neuroFrame.style.transform = '';
           }
         }
-        if (e.touches.length === 0) _nPanning = false;
       });
     }
 

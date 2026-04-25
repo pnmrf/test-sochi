@@ -1939,6 +1939,12 @@ html.dark .bs-action-btn:hover {
   }
 }
 
+#neuro-info-sheet {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 /* ── 12. 3D GALLERY ── */
 #screen-3d-gallery,
 #screen-neuro-gallery {
