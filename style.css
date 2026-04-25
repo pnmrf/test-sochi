@@ -1469,6 +1469,11 @@ html.dark .nc-nav-btn.active:hover { background: var(--accent); }
   opacity: 0.65;
 }
 
+#neuro-btn-eye,
+#neuro-btn-magnify {
+  display: none;
+}
+
 .neuro-frame.magnifying {
   cursor: none;
 }
@@ -1522,18 +1527,7 @@ html.dark .neuro-sidebar {
 
 @media (max-width: 767px) {
   .neuro-sidebar-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    left: 14px;
-    top: calc(var(--tb-h) + 14px);
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    z-index: 900;
-    cursor: pointer;
-    color: var(--text);
+    display: none;
   }
 
   .neuro-sidebar {
@@ -1554,19 +1548,28 @@ html.dark .neuro-sidebar {
     transform: translateX(0);
   }
 
-  #screen-neuro.neuro-sidebar-visible .neuro-sidebar-toggle {
-    left: calc(min(300px, 85vw) + 14px);
-  }
-
   .neuro-viewer {
     left: 0;
   }
 
+  /* В мобиле изображение вписывается целиком */
+  .neuro-img {
+    object-fit: contain;
+  }
+
+  .neuro-half img {
+    object-fit: contain;
+  }
+
+  /* Панель управления занимает место таб-бара */
   .neuro-controls {
-    left: 16px;
+    left: 50%;
     right: auto;
-    bottom: calc(22px + 56px + 12px);
-    width: auto;
+    transform: translateX(-50%);
+    bottom: calc(22px + env(safe-area-inset-bottom));
+    width: calc(100% - 32px);
+    max-width: 380px;
+    height: 56px;
     border-radius: var(--radius-pill);
     border: 1px solid var(--glass-border);
     border-top: 1px solid var(--glass-border);
@@ -1586,10 +1589,10 @@ html.dark .neuro-sidebar {
     display: none;
   }
 
-  /* Sidebar aligned like wiki sidebar */
+  /* Sidebar — оставляем место снизу под панель управления */
   .neuro-sidebar {
     top: 24px;
-    bottom: 20px;
+    bottom: calc(22px + env(safe-area-inset-bottom) + 56px + 8px);
   }
 
   /* Close button shows on desktop as back-to-gallery */
@@ -1597,14 +1600,15 @@ html.dark .neuro-sidebar {
     display: flex;
   }
 
-  /* Controls as floating pill — bottom-left of viewer area, aligned with tab bar */
+  /* Панель управления — левый нижний угол, выровнена по левому краю сайдбара и по высоте таб-бара */
   .neuro-controls {
-    left: calc(var(--sidebar-w) + 20px);
+    left: 12px;
     transform: none;
-    width: auto;
-    min-width: 320px;
-    bottom: 22px;
-    border-radius: var(--radius-pill);
+    width: 320px;
+    min-width: unset;
+    bottom: calc(22px + env(safe-area-inset-bottom));
+    height: 56px;
+    border-radius: var(--radius-lg);
     border-top: none;
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
@@ -1879,7 +1883,8 @@ html.dark .neuro-sidebar {
 }
 
 /* ── 12. 3D GALLERY ── */
-#screen-3d-gallery {
+#screen-3d-gallery,
+#screen-neuro-gallery {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -3735,12 +3740,20 @@ html.dark .wa-view-btn:hover {
   }
 }
 
-/* ── Tab bar прозрачность в режиме нейрохроник ── */
-#app.neuro-active .tab-bar {
-  opacity: 0.35 !important;
-  transition: opacity 0.3s ease;
+/* ── Tab bar в режиме нейрохроник ── */
+/* Десктоп: слегка прозрачный */
+@media (min-width: 768px) {
+  #app.neuro-active .tab-bar {
+    opacity: 0.35 !important;
+    transition: opacity 0.3s ease;
+  }
+  #app.neuro-active .tab-bar:hover {
+    opacity: 1 !important;
+  }
 }
-
-#app.neuro-active .tab-bar:hover {
-  opacity: 1 !important;
+/* Мобайл: скрыт полностью, вместо него — neuro-controls */
+@media (max-width: 767px) {
+  #app.neuro-active .tab-bar {
+    display: none !important;
+  }
 }

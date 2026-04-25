@@ -52,6 +52,7 @@
   const hide = el => el && el.classList.add('hidden');
 
   let _lbScale = 1;
+  let _neuroScale = 1;
 
   function typeColor(type) {
     return { neuro: '#F59E0B', '3d': '#4A9EE0', building: '#6B7280', sculpture: '#A78BFA' }[type] || '#6B7280';
@@ -637,6 +638,8 @@
     const imgEl = $('neuro-img-restored');
     imgEl.onload = null;
     imgEl.src = obj.photo_restored || '';
+    imgEl.style.transform = '';
+    _neuroScale = 1;
     const frame = $('neuro-frame');
     if (frame) frame.style.aspectRatio = '';
 
@@ -2027,6 +2030,41 @@ if (wikiCollapseBtn) {
       neuroViewer.addEventListener('mouseleave', () => {
         hide($('neuro-magnifier'));
         $('neuro-frame')?.classList.remove('magnifying');
+      });
+    }
+
+    // Pinch-to-zoom для мобильного просмотра нейрохроник
+    const neuroFrame = $('neuro-frame');
+    if (neuroFrame) {
+      let _nPinching = false;
+      let _nInitDist = 0;
+      let _nBaseScale = 1;
+
+      function _nDist(t) {
+        const dx = t[0].clientX - t[1].clientX;
+        const dy = t[0].clientY - t[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+
+      neuroFrame.addEventListener('touchstart', e => {
+        if (e.touches.length === 2) {
+          _nPinching = true;
+          _nInitDist = _nDist(e.touches);
+          _nBaseScale = _neuroScale;
+        }
+      }, { passive: true });
+
+      neuroFrame.addEventListener('touchmove', e => {
+        if (_nPinching && e.touches.length === 2 && !STATE.neuroCompareMode) {
+          const dist = _nDist(e.touches);
+          _neuroScale = Math.min(4, Math.max(1, _nBaseScale * (dist / _nInitDist)));
+          const img = $('neuro-img-restored');
+          if (img) img.style.transform = `scale(${_neuroScale})`;
+        }
+      }, { passive: true });
+
+      neuroFrame.addEventListener('touchend', e => {
+        if (_nPinching && e.touches.length < 2) _nPinching = false;
       });
     }
 
