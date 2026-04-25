@@ -979,6 +979,17 @@ function setNeuroMode(mode) {
     hideBottomSheet();
     compareBtn.classList.add('active');
     STATE.neuroCompareMode = true;
+
+    // На мобиле: сбрасываем зум/пан → изображение всегда зафиксировано в 1×
+    // Это гарантирует что стрелки слайдера всегда одного размера
+    if (window.innerWidth <= 767 || window.innerHeight <= 499) {
+      _neuroScale = 1;
+      _nTranslateX = 0;
+      _nTranslateY = 0;
+      const nf = $('neuro-frame');
+      if (nf) nf.style.transform = '';
+    }
+
     initNeuroSlider(true);
   }
 }
@@ -2233,11 +2244,6 @@ if (wikiCollapseBtn) {
 
       function _nApply() {
         neuroFrame.style.transform = `translate(${_nTranslateX}px, ${_nTranslateY}px) scale(${_neuroScale})`;
-        // Counter-scale слайдера: стрелки и линия остаются одного размера при зуме
-        const divider = $('neuro-divider');
-        if (divider) {
-          divider.style.setProperty('--divider-cs', 1 / _neuroScale);
-        }
       }
 
       function _nClamp() {
@@ -2248,6 +2254,9 @@ if (wikiCollapseBtn) {
       }
 
       neuroFrame.addEventListener('touchstart', e => {
+        // В режиме сравнения (до/после) зум и пан заблокированы
+        if (STATE.neuroCompareMode) return;
+
         if (e.touches.length >= 2) {
           // Двупальцевый жест: одновременно pinch + pan по midpoint (как на iOS)
           _nPinching = true;
@@ -2310,9 +2319,6 @@ if (wikiCollapseBtn) {
             _nTranslateX = 0;
             _nTranslateY = 0;
             neuroFrame.style.transform = '';
-            // Сбрасываем counter-scale слайдера
-            const divider = $('neuro-divider');
-            if (divider) divider.style.removeProperty('--divider-cs');
           }
         }
       });

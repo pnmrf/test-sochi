@@ -1238,8 +1238,7 @@ html.dark .btn-glass:hover {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(2px * var(--divider-cs, 1));
-  min-width: 1px;
+  width: 2px;
   background: rgba(255, 255, 255, 0.9);
 }
 
@@ -1247,7 +1246,7 @@ html.dark .btn-glass:hover {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(var(--divider-cs, 1));
+  transform: translate(-50%, -50%);
   width: 2px;
   height: 48px;
   background: transparent;
@@ -1313,8 +1312,7 @@ html.dark .btn-glass:hover {
 .neuro-divider::before {
   right: 100%;
   margin-right: 6px;
-  transform: translateY(-50%) scale(var(--divider-cs, 1));
-  transform-origin: right center;
+  transform: translateY(-50%);
   border-width: 6px 7px 6px 0;
   border-color: transparent white transparent transparent;
 }
@@ -1323,8 +1321,7 @@ html.dark .btn-glass:hover {
 .neuro-divider::after {
   left: 100%;
   margin-left: 6px;
-  transform: translateY(-50%) scale(var(--divider-cs, 1));
-  transform-origin: left center;
+  transform: translateY(-50%);
   border-width: 6px 0 6px 7px;
   border-color: transparent transparent transparent white;
 }
@@ -1506,7 +1503,7 @@ html.dark .nc-nav-btn.active:hover { background: var(--accent); }
   flex-shrink: 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (max-height: 499px) {
   #neuro-top-bar {
     background: transparent !important;
     backdrop-filter: none !important;
@@ -1546,7 +1543,8 @@ html.dark .neuro-sidebar {
   border-left: 1px solid rgba(255,255,255,0.22);
 }
 
-@media (max-width: 767px) {
+/* Мобиле + горизонтальный режим телефона (ориентация значения не имеет) */
+@media (max-width: 767px), (max-height: 499px) {
   .neuro-sidebar-toggle {
     display: none;
   }
@@ -1563,6 +1561,15 @@ html.dark .neuro-sidebar {
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
     padding-bottom: 20px;
     box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+    /* Без гласморфизма — сплошной фон */
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  html.dark .neuro-sidebar {
+    background: var(--surface);
+    border-color: var(--glass-border);
   }
 
   .neuro-sidebar.open {
@@ -1582,20 +1589,25 @@ html.dark .neuro-sidebar {
     object-fit: contain;
   }
 
-  /* Панель управления занимает место таб-бара */
+  /* Панель управления — внизу по центру, без гласморфизма */
   .neuro-controls {
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    bottom: calc(22px + env(safe-area-inset-bottom));
-    width: calc(100% - 32px);
-    max-width: 380px;
-    height: 56px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    width: auto;
+    min-width: min(calc(100% - 32px), 380px);
+    max-width: calc(100% - 32px);
+    height: 52px;
     border-radius: var(--radius-pill);
     border: 1px solid var(--glass-border);
     border-top: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    padding: 0 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.14);
+    padding: 0 10px;
+    /* Без гласморфизма */
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   #screen-neuro-gallery .gallery-grid {
@@ -1606,11 +1618,11 @@ html.dark .neuro-sidebar {
 
   /* Инфо-карточка: контент поднимается выше панели управления */
   #neuro-info-sheet .bs-content {
-    padding-bottom: calc(56px + 22px + env(safe-area-inset-bottom) + 20px);
+    padding-bottom: calc(52px + 14px + env(safe-area-inset-bottom) + 20px);
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (min-height: 500px) {
   #neuro-top-bar {
     display: none;
   }
@@ -1885,7 +1897,7 @@ html.dark .neuro-sidebar {
   display: none; /* скрыт на мобиле */
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (min-height: 500px) {
   .neuro-gallery-list {
     display: flex;
     flex-direction: column;
@@ -2015,7 +2027,7 @@ html.dark .neuro-sidebar {
   display: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (min-height: 500px) {
   .neuro-desktop-label {
     display: block;
     position: fixed;
@@ -4088,16 +4100,7 @@ html.dark .wa-view-btn:hover {
   }
 }
 
-/* ── Tab bar в режиме нейрохроник ── */
-/* Десктоп: скрываем полностью — контролы переехали в нижний центр */
-@media (min-width: 768px) {
-  #app.neuro-active .tab-bar {
-    display: none !important;
-  }
-}
-/* Мобайл: скрыт полностью, вместо него — neuro-controls */
-@media (max-width: 767px) {
-  #app.neuro-active .tab-bar {
-    display: none !important;
-  }
+/* ── Tab bar в режиме нейрохроник — скрыт везде ── */
+#app.neuro-active .tab-bar {
+  display: none !important;
 }
