@@ -1059,8 +1059,15 @@ function setNeuroMode(mode) {
 
   if (resetPosition) {
     requestAnimationFrame(() => {
-      const rect = container.getBoundingClientRect();
-      setPos(rect.left + rect.width / 2);
+      const containerRect = container.getBoundingClientRect();
+      // Центр ВИДИМОЙ части контейнера (пересечение с viewport),
+      // а не центр всего изображения — иначе при зуме/пане слайдер уходит за экран
+      const visLeft  = Math.max(containerRect.left, 0);
+      const visRight = Math.min(containerRect.right, window.innerWidth);
+      const centerX  = visLeft < visRight
+        ? (visLeft + visRight) / 2   // середина видимой полосы
+        : window.innerWidth / 2;     // fallback: центр экрана
+      setPos(centerX);
     });
   }
 }
@@ -2235,6 +2242,9 @@ if (wikiCollapseBtn) {
 
       function _nApply() {
         neuroFrame.style.transform = `translate(${_nTranslateX}px, ${_nTranslateY}px) scale(${_neuroScale})`;
+        // Counter-scale для слайдера: стрелки и линия всегда одного размера на экране
+        const divider = $('neuro-divider');
+        if (divider) divider.style.setProperty('--divider-cs', 1 / _neuroScale);
       }
 
       function _nClamp() {
@@ -2310,6 +2320,9 @@ if (wikiCollapseBtn) {
             _nTranslateX = 0;
             _nTranslateY = 0;
             neuroFrame.style.transform = '';
+            // Сбрасываем counter-scale слайдера
+            const divider = $('neuro-divider');
+            if (divider) divider.style.removeProperty('--divider-cs');
           }
         }
       });

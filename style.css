@@ -1239,7 +1239,8 @@ html.dark .btn-glass:hover {
   top: 0;
   bottom: 0;
   left: 50%;
-  transform: translateX(-50%);
+  /* Линия сжимается обратно до 2px при любом масштабе */
+  transform: translateX(-50%) scaleX(var(--divider-cs, 1));
   width: 2px;
   background: rgba(255, 255, 255, 0.9);
 }
@@ -1248,7 +1249,8 @@ html.dark .btn-glass:hover {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  /* Хэндл всегда одного размера — counter-scale относительно родителя */
+  transform: translate(-50%, -50%) scale(var(--divider-cs, 1));
   width: 2px;
   height: 48px;
   background: transparent;
@@ -1314,7 +1316,8 @@ html.dark .btn-glass:hover {
 .neuro-divider::before {
   right: 100%;
   margin-right: 6px;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(var(--divider-cs, 1));
+  transform-origin: right center;
   border-width: 6px 7px 6px 0;
   border-color: transparent white transparent transparent;
 }
@@ -1323,7 +1326,8 @@ html.dark .btn-glass:hover {
 .neuro-divider::after {
   left: 100%;
   margin-left: 6px;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(var(--divider-cs, 1));
+  transform-origin: left center;
   border-width: 6px 0 6px 7px;
   border-color: transparent transparent transparent white;
 }
