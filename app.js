@@ -54,6 +54,8 @@
 
   let _lbScale = 1;
   let _neuroScale = 1;
+  let _nTranslateX = 0;
+  let _nTranslateY = 0;
 
   function typeColor(type) {
     return { neuro: '#F59E0B', '3d': '#4A9EE0', building: '#6B7280', sculpture: '#A78BFA' }[type] || '#6B7280';
@@ -642,6 +644,8 @@
     imgEl.style.transform = '';
     imgEl.style.filter = '';
     _neuroScale = 1;
+    _nTranslateX = 0;
+    _nTranslateY = 0;
     STATE.neuroBwMode = false;
     $('neuro-btn-bw')?.classList.remove('active');
     const frame = $('neuro-frame');
@@ -889,6 +893,9 @@ function setNeuroMode(mode) {
     if (STATE.neuroCompareMode) {
       compareBtn.classList.remove('active');
       show(restored);
+      if (_neuroScale > 1) {
+        restored.style.transform = `translate(${_nTranslateX}px, ${_nTranslateY}px) scale(${_neuroScale})`;
+      }
       hide(compare);
       STATE.neuroCompareMode = false;
       return;
@@ -1296,6 +1303,26 @@ function hideBottomSheet() {
 
     handle.addEventListener('touchend', endDrag);
     handle.addEventListener('touchcancel', endDrag);
+
+    // Свайп вниз из любого места карточки (не только ручки)
+    const content = sheet.querySelector('.bs-content');
+    sheet.addEventListener('touchstart', e => {
+      if (e.target.closest('.bs-handle-wrap, button, a, input, select, textarea')) return;
+      startDrag(e.touches[0].clientY);
+    }, { passive: true });
+
+    sheet.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      if (content && content.scrollTop > 0 && e.touches[0].clientY < startY) {
+        dragging = false;
+        return;
+      }
+      moveDrag(e.touches[0].clientY);
+      e.preventDefault();
+    }, { passive: false });
+
+    sheet.addEventListener('touchend', endDrag);
+    sheet.addEventListener('touchcancel', endDrag);
 
     handle.addEventListener('mousedown', e => {
       e.preventDefault();
@@ -2098,12 +2125,17 @@ if (wikiCollapseBtn) {
       });
     }
 
-    // Pinch-to-zoom для мобильного просмотра нейрохроник
+    // Pinch-to-zoom и pan для мобильного просмотра нейрохроник
     const neuroFrame = $('neuro-frame');
     if (neuroFrame) {
       let _nPinching = false;
       let _nInitDist = 0;
       let _nBaseScale = 1;
+      let _nPanning = false;
+      let _nPanStartX = 0;
+      let _nPanStartY = 0;
+      let _nBasePanX = 0;
+      let _nBasePanY = 0;
 
       function _nDist(t) {
         const dx = t[0].clientX - t[1].clientX;
@@ -2111,29 +2143,63 @@ if (wikiCollapseBtn) {
         return Math.sqrt(dx * dx + dy * dy);
       }
 
+      function _nApply(img) {
+        img.style.transform = `translate(${_nTranslateX}px, ${_nTranslateY}px) scale(${_neuroScale})`;
+      }
+
       neuroFrame.addEventListener('touchstart', e => {
         if (e.touches.length === 2) {
           _nPinching = true;
+          _nPanning = false;
           _nInitDist = _nDist(e.touches);
           _nBaseScale = _neuroScale;
+          _nBasePanX = _nTranslateX;
+          _nBasePanY = _nTranslateY;
+          e.preventDefault();
+        } else if (e.touches.length === 1 && _neuroScale > 1 && !STATE.neuroCompareMode) {
+          _nPanning = true;
+          _nPanStartX = e.touches[0].clientX;
+          _nPanStartY = e.touches[0].clientY;
+          _nBasePanX = _nTranslateX;
+          _nBasePanY = _nTranslateY;
           e.preventDefault();
         }
       }, { passive: false });
 
       neuroFrame.addEventListener('touchmove', e => {
         if (_nPinching && e.touches.length === 2) {
-          e.preventDefault(); // останавливает зум viewport браузера
+          e.preventDefault();
           if (!STATE.neuroCompareMode) {
             const dist = _nDist(e.touches);
             _neuroScale = Math.min(4, Math.max(1, _nBaseScale * (dist / _nInitDist)));
             const img = $('neuro-img-restored');
-            if (img) img.style.transform = `scale(${_neuroScale})`;
+            if (img) _nApply(img);
           }
+        } else if (_nPanning && e.touches.length === 1 && _neuroScale > 1) {
+          e.preventDefault();
+          const dx = e.touches[0].clientX - _nPanStartX;
+          const dy = e.touches[0].clientY - _nPanStartY;
+          const maxX = (neuroFrame.clientWidth * (_neuroScale - 1)) / 2;
+          const maxY = (neuroFrame.clientHeight * (_neuroScale - 1)) / 2;
+          _nTranslateX = Math.min(maxX, Math.max(-maxX, _nBasePanX + dx));
+          _nTranslateY = Math.min(maxY, Math.max(-maxY, _nBasePanY + dy));
+          const img = $('neuro-img-restored');
+          if (img) _nApply(img);
         }
       }, { passive: false });
 
       neuroFrame.addEventListener('touchend', e => {
-        if (_nPinching && e.touches.length < 2) _nPinching = false;
+        if (_nPinching && e.touches.length < 2) {
+          _nPinching = false;
+          if (_neuroScale <= 1) {
+            _neuroScale = 1;
+            _nTranslateX = 0;
+            _nTranslateY = 0;
+            const img = $('neuro-img-restored');
+            if (img) img.style.transform = '';
+          }
+        }
+        if (e.touches.length === 0) _nPanning = false;
       });
     }
 

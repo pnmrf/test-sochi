@@ -1600,6 +1600,11 @@ html.dark .neuro-sidebar {
     gap: 12px;
     padding: calc(var(--tb-h) + 12px) 16px calc(var(--tab-h) + 28px);
   }
+
+  /* Инфо-карточка: контент поднимается выше панели управления */
+  #neuro-info-sheet .bs-content {
+    padding-bottom: calc(56px + 22px + env(safe-area-inset-bottom) + 20px);
+  }
 }
 
 @media (min-width: 768px) {
