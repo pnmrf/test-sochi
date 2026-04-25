@@ -979,17 +979,8 @@ function setNeuroMode(mode) {
     hideBottomSheet();
     compareBtn.classList.add('active');
     STATE.neuroCompareMode = true;
-
-    // На мобиле: сбрасываем зум/пан → изображение всегда зафиксировано в 1×
-    // Это гарантирует что стрелки слайдера всегда одного размера
-    if (window.innerWidth <= 767 || window.innerHeight <= 499) {
-      _neuroScale = 1;
-      _nTranslateX = 0;
-      _nTranslateY = 0;
-      const nf = $('neuro-frame');
-      if (nf) nf.style.transform = '';
-    }
-
+    // Зум/пан заморожен на время работы слайдера (см. touchstart на neuro-frame).
+    // Положение и масштаб не сбрасываются — слайдер накладывается поверх текущего вида.
     initNeuroSlider(true);
   }
 }

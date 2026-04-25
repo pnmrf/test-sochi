@@ -1124,6 +1124,8 @@ html.dark .btn-glass:hover {
 /* ── 10. NEURO SCREEN ── */
 #screen-neuro {
   padding: 0;
+  /* Запрет двойного касания (browser double-tap zoom) на всём экране нейрохроник */
+  touch-action: manipulation;
 }
 
 .neuro-viewer {
@@ -1622,6 +1624,55 @@ html.dark .neuro-sidebar {
   }
 }
 
+/* ── Горизонтальный режим телефона: панель управления вертикально справа ── */
+@media (orientation: landscape) and (max-height: 499px) {
+  /* Viewer занимает весь экран */
+  .neuro-viewer {
+    left: 0;
+  }
+
+  /* Вертикальная панель у правой границы, выровнена с кнопкой темы */
+  .neuro-controls {
+    left: auto;
+    right: 16px;
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+    flex-direction: column;
+    width: 52px;
+    min-width: unset;
+    max-width: unset;
+    height: auto;
+    padding: 6px 0;
+    gap: 2px;
+    border-radius: var(--radius-lg);
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Группа навигации prev/counter/next — тоже вертикально */
+  .neuro-controls .neuro-nav-group {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  /* Счётчик 1/3 — читаемо вертикально */
+  .neuro-controls .neuro-nav-counter {
+    font-size: 10px;
+    min-width: unset;
+  }
+
+  /* Кнопки чуть компактнее */
+  .neuro-controls .nc-btn,
+  .neuro-controls .nc-nav-btn {
+    padding: 9px;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+  }
+}
+
 @media (min-width: 768px) and (min-height: 500px) {
   #neuro-top-bar {
     display: none;
@@ -1691,7 +1742,7 @@ html.dark .neuro-sidebar {
     bottom: 20px;
     top: auto;
     height: 56px;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-pill);
     border-top: none;
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
@@ -2233,6 +2284,17 @@ html.dark .bs-action-btn:hover {
   #neuro-info-sheet,
   #viewer-info-sheet {
     max-width: 600px;
+  }
+}
+
+/* На десктопе info sheet вылетает выше панели controls (bottom: 20+56+12=88px) */
+@media (min-width: 768px) and (min-height: 500px) {
+  #neuro-info-sheet {
+    bottom: 88px;
+    border-radius: var(--radius-lg);
+    max-height: calc(100vh - 88px - 60px);
+    /* сдвиг при центрировании относительно viewer-области */
+    left: calc(50% + 172px);  /* (344px sidebar) / 2 = 172px сдвиг вправо */
   }
 }
 
