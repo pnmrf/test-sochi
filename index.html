@@ -14,8 +14,8 @@
   <link rel="dns-prefetch" href="https://api.maptiler.com" />
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Tenor+Sans&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
   <noscript><link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Tenor+Sans&display=swap" rel="stylesheet" /></noscript>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,grid_view,home,hourglass_empty,info,layers,light_mode,map,menu_book,my_location,person,photo_library,push_pin,remove,restart_alt,search,send,tune,unfold_less,unfold_more,view_in_ar,visibility&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,grid_view,home,hourglass_empty,info,layers,light_mode,map,menu_book,my_location,person,photo_library,push_pin,remove,restart_alt,search,send,tune,unfold_less,unfold_more,view_in_ar,visibility&display=swap" rel="stylesheet" /></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,filter_b_and_w,grid_view,home,hourglass_empty,info,layers,light_mode,map,menu_book,my_location,person,photo_library,push_pin,remove,restart_alt,search,send,tune,unfold_less,unfold_more,view_in_ar,visibility&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=add,architecture,arrow_back,auto_fix_high,chevron_left,chevron_right,close,compare,dark_mode,domain,emoji_objects,expand_more,explore,filter_b_and_w,grid_view,home,hourglass_empty,info,layers,light_mode,map,menu_book,my_location,person,photo_library,push_pin,remove,restart_alt,search,send,tune,unfold_less,unfold_more,view_in_ar,visibility&display=swap" rel="stylesheet" /></noscript>
 
   <link rel="preload" href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
   <noscript><link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet" /></noscript>
@@ -222,6 +222,16 @@
           <p id="neuro-info-year" class="bs-meta"></p>
           <p id="neuro-info-desc" class="bs-desc"></p>
           <a id="neuro-info-source" href="#" target="_blank" class="bs-link"></a>
+          <div class="bs-actions">
+            <button class="bs-action-btn" id="neuro-info-map-btn">
+              <span class="material-symbols-outlined">map</span>
+              Посмотреть на карте
+            </button>
+            <button class="bs-action-btn" id="neuro-info-wiki-btn">
+              <span class="material-symbols-outlined">menu_book</span>
+              Подробнее
+            </button>
+          </div>
         </div>
       </div>
 
@@ -271,8 +281,14 @@
         <button class="nc-btn" id="neuro-btn-magnify" aria-label="Лупа">
           <span class="material-symbols-outlined">search</span>
         </button>
+        <button class="nc-btn" id="neuro-btn-info" aria-label="Информация">
+          <span class="material-symbols-outlined">info</span>
+        </button>
         <button class="nc-btn" id="neuro-btn-compare" data-mode="compare" aria-label="Сравнить до и после">
           <span class="material-symbols-outlined">compare</span>
+        </button>
+        <button class="nc-btn" id="neuro-btn-bw" aria-label="Оригинал (ч/б)">
+          <span class="material-symbols-outlined">filter_b_and_w</span>
         </button>
         <div class="neuro-nav-group" id="neuro-nav-group">
           <button class="nc-nav-btn" id="neuro-prev" aria-label="Предыдущая">
@@ -287,12 +303,11 @@
 
       <div id="neuro-overlay" class="neuro-overlay hidden"></div>
 
-      <header id="neuro-top-bar" class="top-bar top-bar-neuro glass">
-        <button class="tb-btn" id="neuro-back-mobile" aria-label="Назад">
+      <header id="neuro-top-bar" class="top-bar top-bar-neuro">
+        <button class="tb-btn neuro-float-btn glass" id="neuro-back-mobile" aria-label="Назад">
           <span class="material-symbols-outlined">arrow_back</span>
         </button>
-        <span class="tb-title"></span>
-        <button class="tb-btn" id="neuro-theme-mobile" aria-label="Сменить тему">
+        <button class="tb-btn neuro-float-btn glass" id="neuro-theme-mobile" aria-label="Сменить тему">
           <span class="material-symbols-outlined" id="neuro-theme-icon-mobile">dark_mode</span>
         </button>
       </header>

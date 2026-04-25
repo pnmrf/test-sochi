@@ -1157,6 +1157,7 @@ html.dark .btn-glass:hover {
   border-radius: 0;
   overflow: hidden;
   background: var(--bg);
+  touch-action: none;
 }
 
 .neuro-img {
@@ -1333,9 +1334,9 @@ html.dark .btn-glass:hover {
   z-index: 1052;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 0 16px;
+  justify-content: space-evenly;
+  gap: 4px;
+  padding: 0 10px;
   height: var(--tb-h);
   border-top: 1px solid var(--glass-border);
   background: var(--glass-bg);
@@ -1371,11 +1372,7 @@ html.dark .btn-glass:hover {
   box-shadow: 0 2px 12px rgba(74,158,224,0.35);
 }
 
-#neuro-btn-info.active {
-  background: transparent;
-  color: var(--text);
-  box-shadow: none;
-}
+/* #neuro-btn-info.active intentionally uses standard .nc-btn.active styles */
 
 .neuro-nav-group {
   display: flex;
@@ -1495,6 +1492,27 @@ html.dark .nc-nav-btn.active:hover { background: var(--accent); }
 /* ── 10.1 NEURO SIDEBAR TOGGLE ── */
 .neuro-sidebar-toggle {
   display: none;
+}
+
+/* Floating circle buttons in neuro top bar (mobile) */
+.neuro-float-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50% !important;
+  pointer-events: auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  #neuro-top-bar {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    justify-content: space-between;
+    width: calc(100% - 32px);
+  }
 }
 
 /* ── 10.2 NEURO SIDEBAR ── */
@@ -1869,6 +1887,40 @@ html.dark .neuro-sidebar {
   color: var(--accent);
   margin-top: 10px;
   display: inline-block;
+}
+
+.bs-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.bs-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 10px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.bs-action-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.bs-action-btn:hover {
+  background: rgba(0,0,0,0.06);
+}
+
+html.dark .bs-action-btn:hover {
+  background: rgba(255,255,255,0.08);
 }
 
 @media (min-width: 768px) {
