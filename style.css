@@ -463,6 +463,20 @@ html.dark .tab-indicator {
   box-shadow: 0 4px 12px rgba(0,0,0,0.35);
 }
 
+/* Глоу для выбранного превью-кружка */
+.marker-preview.selected {
+  animation: preview-glow-in 0.5s ease-out forwards;
+}
+
+@keyframes preview-glow-in {
+  from {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 0 3px var(--preview-color, #6B7280), 0 0 0 0px var(--preview-glow, rgba(107,114,128,0));
+  }
+  to {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 0 3px var(--preview-color, #6B7280), 0 0 16px 6px var(--preview-glow, rgba(107,114,128,0.4));
+  }
+}
+
 .map-marker.gone {
   opacity: 0.45;
   border-style: dashed;
@@ -479,6 +493,9 @@ html.dark .tab-indicator {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .marker-preview.visible {
@@ -490,6 +507,28 @@ html.dark .tab-indicator {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.marker-preview-icon {
+  font-size: 26px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.marker-preview-3d-label {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 /* Map controls */
@@ -548,6 +587,13 @@ html.dark .mc-btn:hover {
 
 .mc-btn:active {
   transform: scale(0.93);
+}
+
+.mc-btn-3d-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
 }
 
 .mc-group {
@@ -3964,32 +4010,6 @@ html.dark .wa-view-btn:hover {
     display: flex !important;
   }
 
-/* ── Плавающая кнопка легенды (только mobile) ── */
-.btn-legend-float {
-  display: none; /* скрыта на десктопе */
-}
-
-@media (max-width: 767px) {
-  .btn-legend-float {
-    display: flex !important;
-    position: absolute;
-    z-index: 200;
-    /* прямо под top-bar: 12px отступ + 56px высота bar + 10px gap */
-    top: calc(12px + env(safe-area-inset-top, 0px) + var(--tb-h) + 10px);
-    right: 16px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    padding: 0;
-    pointer-events: auto;
-    transition: background var(--transition), color var(--transition);
-  }
-
-  #btn-legend-toggle {
-    display: none !important; /* убираем из map-controls на мобиле */
-  }
-}
-
   .legend-panel {
     display: flex;
     flex-direction: column;
@@ -4009,6 +4029,31 @@ html.dark .wa-view-btn:hover {
     max-width: 420px;
   }
 
+}
+
+/* ── Плавающая кнопка легенды (только mobile) ── */
+.btn-legend-float {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .btn-legend-float {
+    display: flex !important;
+    position: absolute;
+    z-index: 200;
+    top: calc(12px + env(safe-area-inset-top, 0px) + var(--tb-h) + 10px);
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    padding: 0;
+    pointer-events: auto;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  #btn-legend-toggle {
+    display: none !important;
+  }
 }
 
 /* ── 16. HOME SCREEN ── */

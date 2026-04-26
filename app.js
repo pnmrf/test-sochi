@@ -5,12 +5,14 @@
   mapTilerKey: 'shLREE7vwKsTx2aQDPjI',
   center: [39.7200, 43.5845],
   zoom: 14,
-  pitch: 0,
+  pitch: 50,
   bearing: 0,
   pitch3d: 50,
   previewZoomIn: 14.5,
   previewZoomOut: 14.35,
   splashDuration: 2000,
+  // Область Большого Сочи с запасом — не даёт грузить тайлы за пределами региона
+  maxBounds: [[38.5, 43.0], [40.6, 44.3]],
   };
 
   // ── STATE ──────────────────────────────────
@@ -20,7 +22,7 @@
     userMarker: null,
     watchId: null,
     isDark: false,
-    is3d: false,
+    is3d: true,
 
     objects: [],
     architects: [],
@@ -42,6 +44,7 @@
     lastNeuro: null,
     wikiFrom: 'map',
     legendVisible: false,
+    buildings3dVisible: true,
     activeBottomSheet: null,
     mapReady: false,
     markerPreviewMode: false,
@@ -264,6 +267,7 @@
         fadeDuration: 500,
         pitch: CONFIG.pitch,
         bearing: CONFIG.bearing,
+        maxBounds: CONFIG.maxBounds,
         attributionControl: false,
         dragPan: true,
         dragRotate: true,
@@ -284,6 +288,7 @@
   STATE.markerPreviewMode = STATE.map.getZoom() >= CONFIG.previewZoomIn;
 
   hidePOI();
+  add3dBuildings();
   placeMarkers();
   updateMarkerVisibility();
   updateBaseLabelsVisibility();
@@ -330,6 +335,71 @@
         }
       });
     });
+  }
+
+  function add3dBuildings() {
+    const m = STATE.map;
+    if (!m) return;
+    // Если источник ещё не готов после смены стиля — ждём следующего styledata
+    if (!m.getSource('maptiler_planet')) {
+      m.once('styledata', () => add3dBuildings());
+      return;
+    }
+    if (m.getLayer('3d-buildings')) m.removeLayer('3d-buildings');
+    if (!STATE.buildings3dVisible) return;
+
+    const layers = m.getStyle().layers;
+    const labelLayer = layers.find(l => l.type === 'symbol' && l.layout && l.layout['text-field']);
+    const beforeId = labelLayer ? labelLayer.id : undefined;
+
+    m.addLayer({
+      id: '3d-buildings',
+      source: 'maptiler_planet',
+      'source-layer': 'building',
+      type: 'fill-extrusion',
+      minzoom: 16,
+      paint: {
+        'fill-extrusion-color': '#ffffff',
+        'fill-extrusion-height': [
+          'interpolate', ['linear'], ['zoom'],
+          16, 0,
+          16.1, ['get', 'render_height']
+        ],
+        'fill-extrusion-base': [
+          'interpolate', ['linear'], ['zoom'],
+          16, 0,
+          16.1, ['get', 'render_min_height']
+        ],
+        'fill-extrusion-opacity': 0,
+        'fill-extrusion-opacity-transition': { duration: 700, delay: 0 }
+      }
+    }, beforeId);
+
+    // Даём MapLibre один кадр обработать addLayer, потом плавно проявляем
+    setTimeout(() => {
+      if (m.getLayer('3d-buildings')) {
+        m.setPaintProperty('3d-buildings', 'fill-extrusion-opacity', 0.15);
+      }
+    }, 50);
+  }
+
+  function toggle3dBuildings() {
+    STATE.buildings3dVisible = !STATE.buildings3dVisible;
+    const btn = $('btn-3d-buildings');
+    if (btn) btn.classList.toggle('active', STATE.buildings3dVisible);
+    if (STATE.buildings3dVisible) {
+      add3dBuildings();
+    } else {
+      if (STATE.map && STATE.map.getLayer('3d-buildings')) {
+        // Сначала плавно скрываем, потом удаляем слой
+        STATE.map.setPaintProperty('3d-buildings', 'fill-extrusion-opacity', 0);
+        setTimeout(() => {
+          if (STATE.map && STATE.map.getLayer('3d-buildings')) {
+            STATE.map.removeLayer('3d-buildings');
+          }
+        }, 750);
+      }
+    }
   }
 
   function hidePOI() {
@@ -392,15 +462,30 @@
       prev.style.borderColor = '#ffffff';
       prev.style.boxShadow = `0 4px 16px rgba(0,0,0,0.3), 0 0 0 3px ${typeColor(item.type)}`;
 
-      const img = document.createElement('img');
-      // Откладываем загрузку: src выставляется только при переключении в preview-режим
-      img.dataset.src = getPrimaryImage(item);
-      img.alt = item.title;
-      img.onerror = () => {
-        img.onerror = null;
-        img.style.display = 'none';
-      };
-      prev.appendChild(img);
+      if (item.type === 'neuro') {
+        prev.style.background = hexToRgba(typeColor('neuro'), 0.15);
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined marker-preview-icon';
+        icon.textContent = 'hourglass_empty';
+        icon.style.color = typeColor('neuro');
+        prev.appendChild(icon);
+      } else if (item.type === '3d') {
+        prev.style.background = hexToRgba(typeColor('3d'), 0.15);
+        const label = document.createElement('span');
+        label.className = 'marker-preview-3d-label';
+        label.textContent = '3D';
+        label.style.color = typeColor('3d');
+        prev.appendChild(label);
+      } else {
+        const img = document.createElement('img');
+        img.dataset.src = getPrimaryImage(item);
+        img.alt = item.title;
+        img.onerror = () => {
+          img.onerror = null;
+          img.style.display = 'none';
+        };
+        prev.appendChild(img);
+      }
 
       prev.addEventListener('click', e => {
         e.stopPropagation();
@@ -564,6 +649,7 @@
       selectedEntry.dot.style.setProperty('--dot-glow', hexToRgba(color, 0.5));
       selectedEntry.dot.classList.add('selected');
       selectedEntry.prev.style.setProperty('--preview-color', color);
+      selectedEntry.prev.style.setProperty('--preview-glow', hexToRgba(color, 0.5));
       selectedEntry.prev.classList.add('selected');
     }
 
@@ -2080,6 +2166,8 @@ if (wikiThemeIcon) {
       STATE.map.once('styledata', () => {
         STATE.map.jumpTo({ center, zoom, bearing, pitch });
         hidePOI();
+        addTerrain();
+        add3dBuildings();
         placeMarkers();
       });
     }
@@ -2173,6 +2261,9 @@ if (wikiCollapseBtn) {
 
     const legendBtn = $('btn-legend-toggle');
     if (legendBtn) legendBtn.addEventListener('click', toggleLegend);
+
+    const buildings3dBtn = $('btn-3d-buildings');
+    if (buildings3dBtn) buildings3dBtn.addEventListener('click', toggle3dBuildings);
 
     const legendFloatBtn = $('btn-legend-float');
     if (legendFloatBtn) legendFloatBtn.addEventListener('click', toggleLegend);
