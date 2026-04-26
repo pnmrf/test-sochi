@@ -1955,6 +1955,11 @@ function toggleMobileSidebar() {
       });
     } else if (tab === 'wiki') {
       switchScreen('wiki');
+      // Автооткрытие сайдбара при первом посещении вики на мобиле
+      if (window.innerWidth <= 767 && !localStorage.getItem('vmas-wiki-sidebar-opened')) {
+        localStorage.setItem('vmas-wiki-sidebar-opened', '1');
+        setTimeout(openMobileSidebar, 200);
+      }
     } else if (tab === 'home') {
       switchScreen('home');
       updateHomeStats();
@@ -2016,6 +2021,15 @@ function toggleMobileSidebar() {
     STATE.isDark = !STATE.isDark;
     document.documentElement.classList.toggle('dark', STATE.isDark);
     localStorage.setItem('vmas-theme', STATE.isDark ? 'dark' : 'light');
+
+    // Принудительный репейнт neuro-controls, чтобы браузер не держал
+    // старый backdrop-filter snapshot после смены темы
+    const nc = $('neuro-controls');
+    if (nc) {
+      nc.style.display = 'none';
+      void nc.offsetHeight;
+      nc.style.display = '';
+    }
 
     const wikiThemeIconMobile = $('wiki-theme-icon-mobile');
 if (wikiThemeIconMobile) {
@@ -2145,8 +2159,7 @@ if (wikiCollapseBtn) {
         switchTab('map');
         if (obj && obj.lat && obj.lng && STATE.map) {
           STATE.map.flyTo({ center: [obj.lng, obj.lat], zoom: 16, duration: 1200 });
-          // После завершения полёта — открыть карточку с анимацией маркера
-          setTimeout(() => openObjectCard(obj), 1300);
+          setTimeout(() => openObjectCard(obj), 200);
         }
       });
     }
@@ -2160,6 +2173,9 @@ if (wikiCollapseBtn) {
 
     const legendBtn = $('btn-legend-toggle');
     if (legendBtn) legendBtn.addEventListener('click', toggleLegend);
+
+    const legendFloatBtn = $('btn-legend-float');
+    if (legendFloatBtn) legendFloatBtn.addEventListener('click', toggleLegend);
 
     document.querySelectorAll('.legend-toggle').forEach(cb => {
       cb.addEventListener('change', filterMarkers);
@@ -2197,7 +2213,7 @@ if (wikiCollapseBtn) {
       switchTab('map');
       if (obj && obj.lat && obj.lng && STATE.map) {
         STATE.map.flyTo({ center: [obj.lng, obj.lat], zoom: 16, duration: 1200 });
-        setTimeout(() => openObjectCard(obj), 1300);
+        setTimeout(() => openObjectCard(obj), 200);
       }
     });
 

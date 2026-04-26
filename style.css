@@ -1128,6 +1128,15 @@ html.dark .btn-glass:hover {
   touch-action: manipulation;
 }
 
+/* Запрет pinch-zoom на не-интерактивных экранах (wiki, галереи) */
+@media (max-width: 767px) {
+  #screen-wiki,
+  #screen-neuro-gallery,
+  #screen-3d-gallery {
+    touch-action: pan-x pan-y;
+  }
+}
+
 .neuro-viewer {
   position: absolute;
   top: 0;
@@ -1315,7 +1324,7 @@ html.dark .btn-glass:hover {
 /* Левый треугольник ◀ */
 .neuro-divider::before {
   right: 100%;
-  margin-right: 6px;
+  margin-right: calc(6px * var(--divider-cs, 1));
   transform: translateY(-50%) scale(var(--divider-cs, 1));
   transform-origin: right center;
   border-width: 6px 7px 6px 0;
@@ -1325,7 +1334,7 @@ html.dark .btn-glass:hover {
 /* Правый треугольник ▶ */
 .neuro-divider::after {
   left: 100%;
-  margin-left: 6px;
+  margin-left: calc(6px * var(--divider-cs, 1));
   transform: translateY(-50%) scale(var(--divider-cs, 1));
   transform-origin: left center;
   border-width: 6px 0 6px 7px;
@@ -1626,6 +1635,22 @@ html.dark .neuro-sidebar {
   #neuro-info-sheet .bs-content {
     padding-bottom: calc(52px + 14px + env(safe-area-inset-bottom) + 20px);
   }
+
+  /* ID-правило перекрывает любые class-правила — гарантированно сплошной фон */
+  #neuro-controls {
+    background: var(--surface);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html.dark #neuro-controls {
+    background: var(--surface);
+    border-color: rgba(255,255,255,0.12);
+  }
+
+  #neuro-info-sheet {
+    background: var(--surface);
+  }
 }
 
 /* ── Горизонтальный режим телефона: панель управления вертикально справа ── */
@@ -1722,7 +1747,7 @@ html.dark .neuro-sidebar {
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-pill);
     box-shadow: var(--glass-shadow);
   }
 
@@ -1777,7 +1802,7 @@ html.dark .neuro-sidebar {
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-pill);
     box-shadow: var(--glass-shadow);
   }
 
@@ -1792,7 +1817,7 @@ html.dark .neuro-sidebar {
     height: 100%;
     padding: 0 20px;
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-pill);
     background: transparent;
     box-shadow: none;
     transition: color var(--transition);
@@ -2108,9 +2133,10 @@ html.dark .neuro-sidebar {
   }
 
   .neuro-desktop-title {
+    font-family: var(--font-display);
     color: var(--text);
     font-size: 18px;
-    font-weight: 500;
+    font-weight: 400;
     line-height: 1.25;
     margin-bottom: 4px;
   }
@@ -3539,6 +3565,17 @@ html.dark .wa-view-btn:hover {
     border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
     transition: transform var(--transition);
     padding-top: calc(12px + 56px + 10px);
+    /* Без glassmorphism на мобиле — сплошной фон */
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+  }
+
+  html.dark .wiki-sidebar {
+    background: var(--surface);
+    box-shadow: 4px 0 32px rgba(0,0,0,0.35);
   }
 
   .wiki-sidebar.open {
@@ -3926,6 +3963,32 @@ html.dark .wa-view-btn:hover {
   #btn-legend-toggle {
     display: flex !important;
   }
+
+/* ── Плавающая кнопка легенды (только mobile) ── */
+.btn-legend-float {
+  display: none; /* скрыта на десктопе */
+}
+
+@media (max-width: 767px) {
+  .btn-legend-float {
+    display: flex !important;
+    position: absolute;
+    z-index: 200;
+    /* прямо под top-bar: 12px отступ + 56px высота bar + 10px gap */
+    top: calc(12px + env(safe-area-inset-top, 0px) + var(--tb-h) + 10px);
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    padding: 0;
+    pointer-events: auto;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  #btn-legend-toggle {
+    display: none !important; /* убираем из map-controls на мобиле */
+  }
+}
 
   .legend-panel {
     display: flex;
