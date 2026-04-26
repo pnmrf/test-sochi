@@ -8,8 +8,9 @@
   pitch: 50,
   bearing: 0,
   pitch3d: 50,
-  previewZoomIn: 14.5,
-  previewZoomOut: 14.35,
+  previewZoomIn: 15.5,
+  previewZoomOut: 15.35,
+  neuroExpandZoom: 17.0,
   splashDuration: 2000,
   // Область Большого Сочи с запасом — не даёт грузить тайлы за пределами региона
   maxBounds: [[38.5, 43.0], [40.6, 44.3]],
@@ -61,7 +62,7 @@
   let _nTranslateY = 0;
 
   function typeColor(type) {
-    return { neuro: '#22c55e', '3d': '#4A9EE0', building: '#6B7280', sculpture: '#A78BFA' }[type] || '#6B7280';
+    return { neuro: '#F59E0B', '3d': '#4A9EE0', building: '#6B7280', sculpture: '#A78BFA' }[type] || '#6B7280';
   }
 
   function typeBadgeLabel(type) {
@@ -299,6 +300,12 @@
   initWikiSearch();
   updateHomeStats();
 
+  if (window.innerWidth >= 768) {
+    STATE.legendVisible = true;
+    $('legend-panel')?.classList.remove('hidden');
+    $('btn-legend-toggle')?.classList.add('active');
+  }
+
   setTimeout(() => {
     const attrib = document.querySelector('.maplibregl-ctrl-attrib');
     if (attrib) attrib.classList.remove('maplibregl-compact-show');
@@ -461,7 +468,7 @@
     const dot = document.createElement('div');
     dot.className = 'md';
     dot.style.setProperty('--mc', color);
-    if (item.status === 'gone') dot.classList.add('gone');
+    if (item.status === 'gone' && item.type !== 'neuro' && item.type !== '3d') dot.classList.add('gone');
 
     if (_markerHasPreview(item)) {
       const img = document.createElement('img');
@@ -531,7 +538,11 @@
       wrap.style.display = filteredVisible ? '' : 'none';
       if (!filteredVisible) return;
 
-      if (STATE.markerPreviewMode) {
+      const shouldExpand = obj.type === 'neuro'
+        ? zoom >= CONFIG.neuroExpandZoom
+        : STATE.markerPreviewMode;
+
+      if (shouldExpand) {
         if (_markerHasPreview(obj)) {
           const img = dot.querySelector('.md-img');
           if (img && img.dataset.src && !img.src) img.src = img.dataset.src;
@@ -2080,7 +2091,7 @@ function toggleMobileSidebar() {
       if (STATE.userMarker) STATE.userMarker.remove();
 
       const el = document.createElement('div');
-      el.style.cssText = 'width:20px;height:20px;background:#EAB308;border-radius:50%;border:3px solid white;box-shadow:0 0 0 6px rgba(234,179,8,0.2)';
+      el.style.cssText = 'width:20px;height:20px;background:#22c55e;border-radius:50%;border:3px solid white;box-shadow:0 0 0 6px rgba(34,197,94,0.2)';
       STATE.userMarker = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(STATE.map);
     });
   }

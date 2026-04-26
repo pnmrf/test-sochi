@@ -12,10 +12,10 @@
   --text-light: #9CA3AF;
   --accent: #4A9EE0;
   --accent-dark: #357ABD;
-  --neuro: #22c55e;
+  --neuro: #F59E0B;
   --building: #6B7280;
   --sculpture: #A78BFA;
-  --accent-geo: #EAB308;
+  --accent-geo: #22c55e;
   --gone: rgba(107,114,128,0.45);
 
   --glass-bg: rgba(255, 255, 255, 0.68);
@@ -525,12 +525,12 @@ html.dark .tab-indicator {
 .md.expanded .md-icon { opacity: 1; }
 
 .md-icon .material-symbols-outlined {
-  font-size: 14px;
+  font-size: 20px;
   line-height: 1;
 }
 
 .md-label {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.05em;
 }
