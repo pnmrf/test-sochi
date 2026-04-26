@@ -61,7 +61,7 @@
   let _nTranslateY = 0;
 
   function typeColor(type) {
-    return { neuro: '#F59E0B', '3d': '#4A9EE0', building: '#6B7280', sculpture: '#A78BFA' }[type] || '#6B7280';
+    return { neuro: '#22c55e', '3d': '#4A9EE0', building: '#6B7280', sculpture: '#A78BFA' }[type] || '#6B7280';
   }
 
   function typeBadgeLabel(type) {
@@ -289,9 +289,11 @@
 
   hidePOI();
   add3dBuildings();
+  syncBuildingColors();
   placeMarkers();
   updateMarkerVisibility();
   updateBaseLabelsVisibility();
+
 
   initWikiNav();
   initWikiSearch();
@@ -320,10 +322,9 @@
       });
 
       STATE.map.on('click', e => {
-        if (
-          !e.originalEvent.target.closest('.map-marker') &&
-          !e.originalEvent.target.closest('.marker-preview')
-        ) {
+        if (_suppressMapClick) { _suppressMapClick = false; return; }
+
+        if (!e.originalEvent.target.closest('.mw')) {
           closeCards();
           if (STATE.legendVisible) {
             const panel = $('legend-panel');
@@ -352,6 +353,9 @@
     const labelLayer = layers.find(l => l.type === 'symbol' && l.layout && l.layout['text-field']);
     const beforeId = labelLayer ? labelLayer.id : undefined;
 
+    const extrusionColor = STATE.isDark ? '#2e2e2e' : '#ffffff';
+    const extrusionOpacity = STATE.isDark ? 0.55 : 0.18;
+
     m.addLayer({
       id: '3d-buildings',
       source: 'maptiler_planet',
@@ -359,16 +363,16 @@
       type: 'fill-extrusion',
       minzoom: 16,
       paint: {
-        'fill-extrusion-color': '#ffffff',
+        'fill-extrusion-color': extrusionColor,
         'fill-extrusion-height': [
           'interpolate', ['linear'], ['zoom'],
           16, 0,
-          16.1, ['get', 'render_height']
+          16.5, ['get', 'render_height']
         ],
         'fill-extrusion-base': [
           'interpolate', ['linear'], ['zoom'],
           16, 0,
-          16.1, ['get', 'render_min_height']
+          16.5, ['get', 'render_min_height']
         ],
         'fill-extrusion-opacity': 0,
         'fill-extrusion-opacity-transition': { duration: 700, delay: 0 }
@@ -378,9 +382,20 @@
     // Даём MapLibre один кадр обработать addLayer, потом плавно проявляем
     setTimeout(() => {
       if (m.getLayer('3d-buildings')) {
-        m.setPaintProperty('3d-buildings', 'fill-extrusion-opacity', 0.15);
+        m.setPaintProperty('3d-buildings', 'fill-extrusion-opacity', extrusionOpacity);
       }
     }, 50);
+  }
+
+  function syncBuildingColors() {
+    const m = STATE.map;
+    if (!m || !m.getStyle() || !STATE.isDark) return;
+    const color = '#383838';
+    m.getStyle().layers.forEach(l => {
+      if (l.type === 'fill' && l['source-layer'] === 'building') {
+        try { m.setPaintProperty(l.id, 'fill-color', color); } catch (e) {}
+      }
+    });
   }
 
   function toggle3dBuildings() {
@@ -429,11 +444,55 @@
   }
 
   // ── MARKERS ─────────────────────────────────
+
+  let _suppressMapClick = false;
+
+  function _markerHasPreview(item) {
+    if (item.type === 'neuro' || item.type === '3d') return false;
+    return !!getPrimaryImage(item);
+  }
+
+  function _buildMarkerEl(item) {
+    const color = typeColor(item.type);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'mw';
+
+    const dot = document.createElement('div');
+    dot.className = 'md';
+    dot.style.setProperty('--mc', color);
+    if (item.status === 'gone') dot.classList.add('gone');
+
+    if (_markerHasPreview(item)) {
+      const img = document.createElement('img');
+      img.className = 'md-img';
+      img.dataset.src = getPrimaryImage(item);
+      img.alt = item.title;
+      img.onerror = () => { img.remove(); };
+      dot.appendChild(img);
+    } else {
+      const iconWrap = document.createElement('div');
+      iconWrap.className = 'md-icon';
+      if (item.type === '3d') {
+        iconWrap.classList.add('md-label');
+        iconWrap.textContent = '3D';
+      } else {
+        const span = document.createElement('span');
+        span.className = 'material-symbols-outlined';
+        span.textContent = item.type === 'neuro'       ? 'hourglass_empty'
+                         : item.type === 'sculpture'   ? 'palette'
+                         : 'account_balance';
+        iconWrap.appendChild(span);
+      }
+      dot.appendChild(iconWrap);
+    }
+
+    wrap.appendChild(dot);
+    return { wrap, dot };
+  }
+
   function clearMarkers() {
-    STATE.markers.forEach(({ dotMarker, prevMarker }) => {
-      if (dotMarker) dotMarker.remove();
-      if (prevMarker) prevMarker.remove();
-    });
+    STATE.markers.forEach(({ mMarker }) => mMarker && mMarker.remove());
     STATE.markers = [];
   }
 
@@ -441,86 +500,18 @@
     clearMarkers();
 
     STATE.mapItems.forEach(item => {
-      const dot = document.createElement('div');
-      dot.className = `map-marker${item.status === 'gone' ? ' gone' : ''}`;
-      dot.style.background = typeColor(item.type);
-      dot.dataset.id = item.id;
-      dot.style.display = 'block';
-      dot.addEventListener('click', e => {
+      const { wrap, dot } = _buildMarkerEl(item);
+
+      wrap.addEventListener('click', e => {
         e.stopPropagation();
         openObjectCard(item);
       });
 
-      const dotMarker = new maplibregl.Marker({ element: dot, anchor: 'center' })
+      const mMarker = new maplibregl.Marker({ element: wrap, anchor: 'center' })
         .setLngLat([item.lng, item.lat])
         .addTo(STATE.map);
 
-      const prev = document.createElement('div');
-      prev.className = 'marker-preview';
-      prev.dataset.id = item.id;
-      prev.style.display = 'none';
-      prev.style.borderColor = '#ffffff';
-      prev.style.boxShadow = `0 4px 16px rgba(0,0,0,0.3), 0 0 0 3px ${typeColor(item.type)}`;
-
-      if (item.type === 'neuro') {
-        prev.style.background = hexToRgba(typeColor('neuro'), 0.15);
-        const icon = document.createElement('span');
-        icon.className = 'material-symbols-outlined marker-preview-icon';
-        icon.textContent = 'hourglass_empty';
-        icon.style.color = typeColor('neuro');
-        prev.appendChild(icon);
-      } else if (item.type === '3d') {
-        prev.style.background = hexToRgba(typeColor('3d'), 0.15);
-        const label = document.createElement('span');
-        label.className = 'marker-preview-3d-label';
-        label.textContent = '3D';
-        label.style.color = typeColor('3d');
-        prev.appendChild(label);
-      } else {
-        const primaryImg = getPrimaryImage(item);
-        const fallbackIcon = document.createElement('span');
-        fallbackIcon.className = 'material-symbols-outlined marker-preview-icon';
-        fallbackIcon.textContent = 'account_balance';
-        fallbackIcon.style.color = typeColor(item.type);
-
-        if (!primaryImg) {
-          prev.style.background = hexToRgba(typeColor(item.type), 0.15);
-          prev.appendChild(fallbackIcon);
-        } else {
-          const img = document.createElement('img');
-          img.dataset.src = primaryImg;
-          img.alt = item.title;
-          fallbackIcon.style.display = 'none';
-          img.onerror = () => {
-            img.onerror = null;
-            img.style.display = 'none';
-            prev.style.background = hexToRgba(typeColor(item.type), 0.15);
-            fallbackIcon.style.display = 'flex';
-          };
-          prev.appendChild(img);
-          prev.appendChild(fallbackIcon);
-        }
-      }
-
-      if (item.status === 'gone') prev.classList.add('gone');
-
-      prev.addEventListener('click', e => {
-        e.stopPropagation();
-        openObjectCard(item);
-      });
-
-      const prevMarker = new maplibregl.Marker({ element: prev, anchor: 'center' })
-        .setLngLat([item.lng, item.lat])
-        .addTo(STATE.map);
-
-      STATE.markers.push({
-        obj: item,
-        dot,
-        dotMarker,
-        prev,
-        prevMarker,
-        filteredVisible: true
-      });
+      STATE.markers.push({ obj: item, wrap, dot, mMarker, filteredVisible: true });
     });
 
     filterMarkers();
@@ -528,7 +519,6 @@
 
   function updateMarkerVisibility() {
     if (!STATE.map) return;
-
     const zoom = STATE.map.getZoom();
 
     if (!STATE.markerPreviewMode && zoom >= CONFIG.previewZoomIn) {
@@ -537,33 +527,22 @@
       STATE.markerPreviewMode = false;
     }
 
-    const showPreview = STATE.markerPreviewMode;
+    STATE.markers.forEach(({ wrap, dot, obj, filteredVisible }) => {
+      wrap.style.display = filteredVisible ? '' : 'none';
+      if (!filteredVisible) return;
 
-    STATE.markers.forEach(marker => {
-      const { dot, prev, filteredVisible } = marker;
-
-      if (!filteredVisible) {
-        dot.style.display = 'none';
-        prev.style.display = 'none';
-        prev.classList.remove('visible');
-        return;
-      }
-
-      if (showPreview) {
-        dot.style.display = 'none';
-        // Ленивая загрузка: ставим src только когда превью впервые показывается
-        const previewImg = prev.querySelector('img');
-        if (previewImg && previewImg.dataset.src && !previewImg.hasAttribute('src')) {
-          previewImg.src = previewImg.dataset.src;
+      if (STATE.markerPreviewMode) {
+        if (_markerHasPreview(obj)) {
+          const img = dot.querySelector('.md-img');
+          if (img && img.dataset.src && !img.src) img.src = img.dataset.src;
+          dot.classList.remove('expanded');
+          dot.classList.add('preview');
+        } else {
+          dot.classList.remove('preview');
+          dot.classList.add('expanded');
         }
-        prev.style.display = 'block';
-        prev.classList.add('visible');
       } else {
-        prev.classList.remove('visible');
-        prev.style.display = 'none';
-        dot.style.display = 'block';
-        dot.style.opacity = '1';
-        dot.style.pointerEvents = 'all';
+        dot.classList.remove('preview', 'expanded');
       }
     });
   }
@@ -573,15 +552,13 @@
     document.querySelectorAll('.legend-toggle[data-layer]').forEach(cb => {
       layerToggles[cb.dataset.layer] = cb.checked;
     });
-
     const filterExists = document.querySelector('.legend-toggle[data-filter="exists"]')?.checked ?? true;
-    const filterGone = document.querySelector('.legend-toggle[data-filter="gone"]')?.checked ?? true;
+    const filterGone   = document.querySelector('.legend-toggle[data-filter="gone"]')?.checked   ?? true;
 
     STATE.markers.forEach(marker => {
       const { obj } = marker;
-      const layerOn = layerToggles[obj.type] !== false;
+      const layerOn  = layerToggles[obj.type] !== false;
       const statusOn = obj.status === 'exists' ? filterExists : filterGone;
-
       marker.filteredVisible = layerOn && statusOn;
     });
 
@@ -655,19 +632,11 @@
       openFn = () => { STATE.neuroCompareMode = false; openNeuro(obj, 'map'); };
     }
 
-    // Анимация выбранного маркера
-    STATE.markers.forEach(m => {
-      m.dot.classList.remove('selected');
-      m.prev.classList.remove('selected');
-    });
+    STATE.markers.forEach(m => m.dot.classList.remove('selected'));
     const selectedEntry = STATE.markers.find(m => m.obj.id === obj.id);
     if (selectedEntry) {
-      const color = typeColor(obj.type);
-      selectedEntry.dot.style.setProperty('--dot-glow', hexToRgba(color, 0.5));
+      selectedEntry.dot.style.setProperty('--mc-glow', hexToRgba(typeColor(obj.type), 0.5));
       selectedEntry.dot.classList.add('selected');
-      selectedEntry.prev.style.setProperty('--preview-color', color);
-      selectedEntry.prev.style.setProperty('--preview-glow', hexToRgba(color, 0.5));
-      selectedEntry.prev.classList.add('selected');
     }
 
     const sc = $('sidebar-card');
@@ -721,10 +690,10 @@
       }
     }
 
-    STATE.map.flyTo({
-    center: [obj.lng, obj.lat],
-    zoom: Math.max(STATE.map.getZoom(), CONFIG.previewZoomIn),
-    duration: 600,
+    STATE.map.easeTo({
+      center: [obj.lng, obj.lat],
+      zoom: Math.max(STATE.map.getZoom(), CONFIG.previewZoomIn),
+      duration: 500,
     });
   }
 
@@ -732,10 +701,7 @@
     $('sidebar-card')?.classList.add('hidden');
     $('mobile-card')?.classList.add('hidden');
     STATE.currentObject = null;
-    STATE.markers.forEach(m => {
-      m.dot.classList.remove('selected');
-      m.prev.classList.remove('selected');
-    });
+    STATE.markers.forEach(m => m.dot.classList.remove('selected'));
   }
 
   // ── NEURO ───────────────────────────────────
@@ -2114,7 +2080,7 @@ function toggleMobileSidebar() {
       if (STATE.userMarker) STATE.userMarker.remove();
 
       const el = document.createElement('div');
-      el.style.cssText = 'width:20px;height:20px;background:#006C49;border-radius:50%;border:3px solid white;box-shadow:0 0 0 6px rgba(0,104,73,0.2)';
+      el.style.cssText = 'width:20px;height:20px;background:#EAB308;border-radius:50%;border:3px solid white;box-shadow:0 0 0 6px rgba(234,179,8,0.2)';
       STATE.userMarker = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(STATE.map);
     });
   }
@@ -2183,8 +2149,8 @@ if (wikiThemeIcon) {
       STATE.map.once('styledata', () => {
         STATE.map.jumpTo({ center, zoom, bearing, pitch });
         hidePOI();
-        addTerrain();
         add3dBuildings();
+        syncBuildingColors();
         placeMarkers();
       });
     }

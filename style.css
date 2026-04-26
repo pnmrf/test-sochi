@@ -12,10 +12,10 @@
   --text-light: #9CA3AF;
   --accent: #4A9EE0;
   --accent-dark: #357ABD;
-  --neuro: #F59E0B;
+  --neuro: #22c55e;
   --building: #6B7280;
   --sculpture: #A78BFA;
-  --accent-geo: #006C49;
+  --accent-geo: #EAB308;
   --gone: rgba(107,114,128,0.45);
 
   --glass-bg: rgba(255, 255, 255, 0.68);
@@ -436,104 +436,103 @@ html.dark .tab-indicator {
   z-index: 20;
 }
 
-.map-marker {
+/* Marker wrapper — fixed 64×64 so MapLibre anchor stays on geoposition */
+.mw {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Dot — base state */
+.md {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.8);
+  background: var(--mc, #6B7280);
+  border: 2px solid rgba(255,255,255,0.85);
   box-shadow: 0 2px 8px rgba(0,0,0,0.25);
   cursor: pointer;
+  pointer-events: all;
+  transition: width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-width 0.2s ease,
+              box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
-/* Глоу появляется при выборе точки — однократно, фиксируется */
-.map-marker.selected {
-  animation: marker-glow-in 0.5s ease-out forwards;
-}
-
-@keyframes marker-glow-in {
-  from {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.25), 0 0 0 0px var(--dot-glow, rgba(107,114,128,0));
-  }
-  to {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.25), 0 0 12px 4px var(--dot-glow, rgba(107,114,128,0.4));
-  }
-}
-
-.map-marker:hover {
+.md:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.35);
 }
 
-/* Глоу для выбранного превью-кружка */
-.marker-preview.selected {
-  animation: preview-glow-in 0.5s ease-out forwards;
+.md.gone { opacity: 0.45; }
+
+.md.selected {
+  animation: md-glow 0.5s ease-out forwards;
 }
 
-@keyframes preview-glow-in {
-  from {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 0 3px var(--preview-color, #6B7280), 0 0 0 0px var(--preview-glow, rgba(107,114,128,0));
-  }
-  to {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 0 3px var(--preview-color, #6B7280), 0 0 16px 6px var(--preview-glow, rgba(107,114,128,0.4));
-  }
+@keyframes md-glow {
+  from { box-shadow: 0 2px 8px rgba(0,0,0,0.25), 0 0 0 0px var(--mc-glow, rgba(107,114,128,0)); }
+  to   { box-shadow: 0 2px 8px rgba(0,0,0,0.25), 0 0 14px 5px var(--mc-glow, rgba(107,114,128,0.4)); }
 }
 
-.map-marker.gone {
-  opacity: 0.45;
-  border-style: dashed;
+/* Expanded state — items without preview image */
+.md.expanded {
+  width: 32px;
+  height: 32px;
 }
 
-.marker-preview.gone {
-  opacity: 0.55;
-  border-style: dashed;
-}
-
-.marker-preview {
+/* Preview state — items with preview image */
+.md.preview {
   width: 52px;
   height: 52px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 3px solid white;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-width: 3px;
+  border-color: white;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 0 2px var(--mc, #6B7280);
 }
 
-.marker-preview.visible {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.marker-preview img {
+/* Photo inside preview */
+.md-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.1s;
+  pointer-events: none;
 }
 
-.marker-preview-icon {
-  font-size: 26px;
-  color: #fff;
+.md.preview .md-img { opacity: 1; }
+
+/* Category icon inside expanded dot */
+.md-icon {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
+  opacity: 0;
+  transition: opacity 0.2s ease 0.1s;
+  color: rgba(255,255,255,0.92);
+  pointer-events: none;
 }
 
-.marker-preview-3d-label {
+.md.expanded .md-icon { opacity: 1; }
+
+.md-icon .material-symbols-outlined {
   font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
+  line-height: 1;
+}
+
+.md-label {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
 }
 
 /* Map controls */
@@ -4282,4 +4281,44 @@ html.dark .wa-view-btn:hover {
 /* ── Tab bar в режиме нейрохроник — скрыт везде ── */
 #app.neuro-active .tab-bar {
   display: none !important;
+}
+
+/* ── Анимация клика по точке на карте ── */
+.point-click-bubble {
+  position: fixed;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%) scale(0);
+  animation: pcbIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.point-click-bubble.out {
+  animation: pcbOut 0.3s ease-in forwards;
+}
+
+.point-click-bubble .material-symbols-outlined {
+  font-size: 22px;
+}
+
+.pcb-label {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+@keyframes pcbIn {
+  from { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+@keyframes pcbOut {
+  from { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  to   { transform: translate(-50%, -50%) scale(0); opacity: 0; }
 }
