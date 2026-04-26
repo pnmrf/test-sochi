@@ -10,7 +10,9 @@
       "Bash(find \"D:/GitHub/vma-sochi/assets/models\" -name \"*.glb\" -exec ls -lh {} \\\\;)",
       "Bash(npx gltf-pipeline *)",
       "Bash(node --check \"D:\\\\GitHub\\\\vma-sochi\\\\app.js\")",
-      "WebFetch(domain:api.maptiler.com)"
+      "WebFetch(domain:api.maptiler.com)",
+      "Bash(python -c ' *)",
+      "Bash(node -e ' *)"
     ]
   }
 }

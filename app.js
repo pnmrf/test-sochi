@@ -477,15 +477,32 @@
         label.style.color = typeColor('3d');
         prev.appendChild(label);
       } else {
-        const img = document.createElement('img');
-        img.dataset.src = getPrimaryImage(item);
-        img.alt = item.title;
-        img.onerror = () => {
-          img.onerror = null;
-          img.style.display = 'none';
-        };
-        prev.appendChild(img);
+        const primaryImg = getPrimaryImage(item);
+        const fallbackIcon = document.createElement('span');
+        fallbackIcon.className = 'material-symbols-outlined marker-preview-icon';
+        fallbackIcon.textContent = 'account_balance';
+        fallbackIcon.style.color = typeColor(item.type);
+
+        if (!primaryImg) {
+          prev.style.background = hexToRgba(typeColor(item.type), 0.15);
+          prev.appendChild(fallbackIcon);
+        } else {
+          const img = document.createElement('img');
+          img.dataset.src = primaryImg;
+          img.alt = item.title;
+          fallbackIcon.style.display = 'none';
+          img.onerror = () => {
+            img.onerror = null;
+            img.style.display = 'none';
+            prev.style.background = hexToRgba(typeColor(item.type), 0.15);
+            fallbackIcon.style.display = 'flex';
+          };
+          prev.appendChild(img);
+          prev.appendChild(fallbackIcon);
+        }
       }
+
+      if (item.status === 'gone') prev.classList.add('gone');
 
       prev.addEventListener('click', e => {
         e.stopPropagation();
