@@ -300,12 +300,6 @@
   initWikiSearch();
   updateHomeStats();
 
-  if (window.innerWidth >= 768) {
-    STATE.legendVisible = true;
-    $('legend-panel')?.classList.remove('hidden');
-    $('btn-legend-toggle')?.classList.add('active');
-  }
-
   setTimeout(() => {
     const attrib = document.querySelector('.maplibregl-ctrl-attrib');
     if (attrib) attrib.classList.remove('maplibregl-compact-show');
@@ -361,7 +355,7 @@
     const beforeId = labelLayer ? labelLayer.id : undefined;
 
     const extrusionColor = STATE.isDark ? '#2e2e2e' : '#ffffff';
-    const extrusionOpacity = STATE.isDark ? 0.55 : 0.18;
+    const extrusionOpacity = STATE.isDark ? 0.50 : 0.18;
 
     m.addLayer({
       id: '3d-buildings',
@@ -484,12 +478,16 @@
         iconWrap.classList.add('md-label');
         iconWrap.textContent = '3D';
       } else {
-        const span = document.createElement('span');
-        span.className = 'material-symbols-outlined';
-        span.textContent = item.type === 'neuro'       ? 'hourglass_empty'
-                         : item.type === 'sculpture'   ? 'palette'
-                         : 'account_balance';
-        iconWrap.appendChild(span);
+        const iconName = item.type === 'neuro'                                ? 'hourglass_empty'
+                     : item.type === 'sculpture'                            ? 'palette'
+                     : (item.type === 'building' && item.status === 'gone') ? null
+                     : 'account_balance';
+        if (iconName) {
+          const span = document.createElement('span');
+          span.className = 'material-symbols-outlined';
+          span.textContent = iconName;
+          iconWrap.appendChild(span);
+        }
       }
       dot.appendChild(iconWrap);
     }
@@ -701,11 +699,10 @@
       }
     }
 
-    STATE.map.easeTo({
-      center: [obj.lng, obj.lat],
-      zoom: Math.max(STATE.map.getZoom(), CONFIG.previewZoomIn),
-      duration: 500,
-    });
+    const targetZoom = obj.type === 'neuro'
+      ? Math.max(STATE.map.getZoom(), CONFIG.neuroExpandZoom)
+      : Math.max(STATE.map.getZoom(), CONFIG.previewZoomIn);
+    STATE.map.easeTo({ center: [obj.lng, obj.lat], zoom: targetZoom, duration: 500 });
   }
 
   function closeCards() {
