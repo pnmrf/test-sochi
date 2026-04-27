@@ -53,6 +53,10 @@
     pastvuPhotos: [],
     pastvuMarkers: [],
     pastvuLayerVisible: false,
+
+    pastvuCityPhotos: [],
+    pastvuCityMarkers: [],
+    pastvuCityVisible: false,
   };
 
   // ── HELPERS ─────────────────────────────────
@@ -738,6 +742,54 @@
   }
 
   // ── PASTVU ───────────────────────────────────
+  const _PASTVU_R_SRC    = 'pastvu-radius-src';
+  const _PASTVU_R_LAYERS = ['pastvu-radius-glow', 'pastvu-radius-line'];
+
+  function _makeCircleGeoJSON(lat, lng, radiusM, steps = 64) {
+    const earthR = 6371000;
+    const coords = [];
+    for (let i = 0; i <= steps; i++) {
+      const angle = (i / steps) * 2 * Math.PI;
+      const dLat = (radiusM / earthR) * (180 / Math.PI) * Math.cos(angle);
+      const dLng = (radiusM / earthR) * (180 / Math.PI) / Math.cos(lat * Math.PI / 180) * Math.sin(angle);
+      coords.push([lng + dLng, lat + dLat]);
+    }
+    return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [coords] } };
+  }
+
+  function _addPastvuRadiusCircle(lat, lng) {
+    const map = STATE.map;
+    if (!map) return;
+    const geojson = _makeCircleGeoJSON(lat, lng, 200);
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4A9EE0';
+
+    if (map.getSource(_PASTVU_R_SRC)) {
+      map.getSource(_PASTVU_R_SRC).setData(geojson);
+      return;
+    }
+
+    map.addSource(_PASTVU_R_SRC, { type: 'geojson', data: geojson });
+    map.addLayer({
+      id: 'pastvu-radius-glow',
+      type: 'line',
+      source: _PASTVU_R_SRC,
+      paint: { 'line-color': accent, 'line-width': 10, 'line-blur': 8, 'line-opacity': 0.35 },
+    });
+    map.addLayer({
+      id: 'pastvu-radius-line',
+      type: 'line',
+      source: _PASTVU_R_SRC,
+      paint: { 'line-color': accent, 'line-width': 1.5, 'line-opacity': 0.8 },
+    });
+  }
+
+  function _removePastvuRadiusCircle() {
+    const map = STATE.map;
+    if (!map) return;
+    _PASTVU_R_LAYERS.forEach(id => { if (map.getLayer(id)) map.removeLayer(id); });
+    if (map.getSource(_PASTVU_R_SRC)) map.removeSource(_PASTVU_R_SRC);
+  }
+
   let _pastvuPopupEl = null;
 
   function closePastvuPopup() {
@@ -794,6 +846,7 @@
     STATE.pastvuPhotos = [];
     STATE.pastvuLayerVisible = false;
     closePastvuPopup();
+    _removePastvuRadiusCircle();
 
     const btn = $('btn-pastvu-toggle');
     if (!btn) return;
@@ -868,10 +921,154 @@
 
       STATE.pastvuLayerVisible = true;
       if (btn) btn.classList.add('active');
+
+      _addPastvuRadiusCircle(lat, lng);
+
+      STATE.map.flyTo({
+        center: [lng, lat],
+        zoom: Math.max(STATE.map.getZoom(), 17.5),
+        duration: 1600,
+        essential: true,
+      });
     } catch (err) {
       showToast('Не удалось загрузить фото');
     } finally {
       if (icon) icon.textContent = 'history';
+    }
+  }
+
+  // ── PASTVU CITY LAYER ────────────────────────
+  const SOCHI_CENTER_POLYGON = {
+    type: 'Polygon',
+    coordinates: [[
+      [39.68, 43.55],
+      [39.68, 43.62],
+      [39.78, 43.62],
+      [39.78, 43.55],
+      [39.68, 43.55],
+    ]],
+  };
+
+  const PASTVU_CITY_CACHE_KEY = 'pastvu_city_sochi';
+  const PASTVU_CITY_TTL = 24 * 60 * 60 * 1000;
+
+  function hidePastvuCityLayer() {
+    STATE.pastvuCityMarkers.forEach(m => m.remove());
+    STATE.pastvuCityMarkers = [];
+    STATE.pastvuCityPhotos = [];
+    STATE.pastvuCityVisible = false;
+    closePastvuPopup();
+
+    const btn = $('btn-pastvu-city');
+    if (!btn) return;
+    btn.classList.remove('active');
+    const icon = btn.querySelector('.material-symbols-outlined');
+    if (icon) icon.textContent = 'map';
+  }
+
+  function _addPastvuCityBatch(photos, index) {
+    const BATCH_SIZE = 20;
+    const end = Math.min(index + BATCH_SIZE, photos.length);
+
+    for (let i = index; i < end; i++) {
+      const photo = photos[i];
+      let markerLat, markerLng;
+      if (Array.isArray(photo.geo) && photo.geo.length >= 2) {
+        [markerLat, markerLng] = photo.geo;
+      } else {
+        markerLat = photo.lat ?? CONFIG.center[1];
+        markerLng = photo.lng ?? CONFIG.center[0];
+      }
+
+      const el = document.createElement('div');
+      el.className = 'pastvu-marker pastvu-city-marker';
+      el.style.backgroundImage = `url('https://img.pastvu.com/h/${photo.file}')`;
+
+      if (photo.year) {
+        const badge = document.createElement('div');
+        badge.className = 'pastvu-marker-year';
+        badge.textContent = photo.year;
+        el.appendChild(badge);
+      }
+
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        _suppressMapClick = true;
+        openPastvuPopup(photo);
+      });
+
+      const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([markerLng, markerLat])
+        .addTo(STATE.map);
+
+      STATE.pastvuCityMarkers.push(marker);
+    }
+
+    if (end < photos.length) {
+      requestAnimationFrame(() => _addPastvuCityBatch(photos, end));
+    }
+  }
+
+  async function togglePastvuCityLayer() {
+    if (STATE.pastvuCityVisible) {
+      hidePastvuCityLayer();
+      return;
+    }
+
+    const btn = $('btn-pastvu-city');
+    const icon = btn?.querySelector('.material-symbols-outlined');
+    if (icon) icon.textContent = 'hourglass_empty';
+
+    try {
+      let photos;
+
+      try {
+        const cached = localStorage.getItem(PASTVU_CITY_CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Date.now() - parsed.ts < PASTVU_CITY_TTL) {
+            photos = parsed.photos;
+          }
+        }
+      } catch (_) {}
+
+      if (!photos) {
+        const params = JSON.stringify({
+          z: 14,
+          geometry: SOCHI_CENTER_POLYGON,
+          localWork: 1,
+          year: 1860,
+          year2: 1991,
+        });
+        const url = `https://api.pastvu.com/api2?method=photo.getByBounds&params=${encodeURIComponent(params)}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+        photos = data.result?.photos || [];
+
+        try {
+          localStorage.setItem(PASTVU_CITY_CACHE_KEY, JSON.stringify({ ts: Date.now(), photos }));
+        } catch (_) {}
+      }
+
+      if (!photos.length) {
+        showToast('Исторических фото не найдено');
+        return;
+      }
+
+      if (photos.length > 80) {
+        showToast(`Показаны первые ${photos.length} исторических фото`);
+      }
+
+      STATE.pastvuCityPhotos = photos;
+      STATE.pastvuCityVisible = true;
+      if (btn) btn.classList.add('active');
+
+      _addPastvuCityBatch(photos, 0);
+    } catch (err) {
+      showToast('Не удалось загрузить исторический слой');
+    } finally {
+      if (icon) icon.textContent = 'map';
     }
   }
 
@@ -2323,6 +2520,9 @@ if (wikiThemeIcon) {
         add3dBuildings();
         syncBuildingColors();
         placeMarkers();
+        if (STATE.pastvuLayerVisible && STATE.currentObject) {
+          _addPastvuRadiusCircle(STATE.currentObject.lat, STATE.currentObject.lng);
+        }
       });
     }
   }
@@ -2421,6 +2621,9 @@ if (wikiCollapseBtn) {
 
     const pastvuBtn = $('btn-pastvu-toggle');
     if (pastvuBtn) pastvuBtn.addEventListener('click', togglePastvuLayer);
+
+    const pastvuCityBtn = $('btn-pastvu-city');
+    if (pastvuCityBtn) pastvuCityBtn.addEventListener('click', togglePastvuCityLayer);
 
     const legendFloatBtn = $('btn-legend-float');
     if (legendFloatBtn) legendFloatBtn.addEventListener('click', toggleLegend);

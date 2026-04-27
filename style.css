@@ -4324,6 +4324,11 @@ html.dark .wa-view-btn:hover {
 }
 
 /* ── 20. PASTVU ── */
+#btn-pastvu-city.active {
+  color: var(--neuro);
+  background: rgba(245, 158, 11, 0.12);
+}
+
 .pastvu-marker {
   width: 44px;
   height: 44px;
