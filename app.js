@@ -49,6 +49,10 @@
     activeBottomSheet: null,
     mapReady: false,
     markerPreviewMode: false,
+
+    pastvuPhotos: [],
+    pastvuMarkers: [],
+    pastvuLayerVisible: false,
   };
 
   // ── HELPERS ─────────────────────────────────
@@ -325,7 +329,8 @@
       STATE.map.on('click', e => {
         if (_suppressMapClick) { _suppressMapClick = false; return; }
 
-        if (!e.originalEvent.target.closest('.mw')) {
+        const target = e.originalEvent.target;
+        if (!target.closest('.mw') && !target.closest('.pastvu-marker') && !target.closest('.pastvu-popup')) {
           closeCards();
           if (STATE.legendVisible) {
             const panel = $('legend-panel');
@@ -334,6 +339,8 @@
             const btn = $('btn-legend-toggle');
             if (btn) btn.classList.remove('active');
           }
+        } else if (!target.closest('.pastvu-popup') && _pastvuPopupEl) {
+          closePastvuPopup();
         }
       });
     });
@@ -621,6 +628,7 @@
 
   // ── OBJECT CARD ─────────────────────────────
   function openObjectCard(obj) {
+    if (STATE.pastvuLayerVisible) hidePastvuLayer();
     STATE.currentObject = obj;
 
     let primaryLabel = 'Подробнее';
@@ -710,6 +718,161 @@
     $('mobile-card')?.classList.add('hidden');
     STATE.currentObject = null;
     STATE.markers.forEach(m => m.dot.classList.remove('selected'));
+    hidePastvuLayer();
+  }
+
+  // ── TOAST ────────────────────────────────────
+  function showToast(msg) {
+    let t = document.querySelector('.toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.className = 'toast';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    clearTimeout(t._hideTimer);
+    t.classList.remove('toast-visible');
+    void t.offsetWidth;
+    t.classList.add('toast-visible');
+    t._hideTimer = setTimeout(() => t.classList.remove('toast-visible'), 3000);
+  }
+
+  // ── PASTVU ───────────────────────────────────
+  let _pastvuPopupEl = null;
+
+  function closePastvuPopup() {
+    if (_pastvuPopupEl) {
+      _pastvuPopupEl.remove();
+      _pastvuPopupEl = null;
+    }
+    document.removeEventListener('click', _onPastvuOutsideClick);
+  }
+
+  function _onPastvuOutsideClick(e) {
+    if (!e.target.closest('.pastvu-popup') && !e.target.closest('.pastvu-marker')) {
+      closePastvuPopup();
+    }
+  }
+
+  function openPastvuPopup(photo) {
+    closePastvuPopup();
+
+    const popup = document.createElement('div');
+    popup.className = 'pastvu-popup glass';
+
+    const year = photo.year ? `<div class="pastvu-popup-year">${photo.year}</div>` : '';
+    const title = photo.title ? `<div class="pastvu-popup-title">${photo.title}</div>` : '';
+
+    popup.innerHTML = `
+      <button class="pastvu-popup-close" aria-label="Закрыть">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <img class="pastvu-popup-img" src="https://img.pastvu.com/d/${photo.file}" alt="${photo.title || ''}" />
+      <div class="pastvu-popup-info">
+        ${year}
+        ${title}
+        <a class="pastvu-popup-link" href="https://pastvu.com/p/${photo.cid}" target="_blank" rel="noopener">Открыть на Pastvu →</a>
+      </div>
+    `;
+
+    $('map-container').appendChild(popup);
+    _pastvuPopupEl = popup;
+
+    popup.querySelector('.pastvu-popup-close').addEventListener('click', e => {
+      e.stopPropagation();
+      closePastvuPopup();
+    });
+
+    setTimeout(() => {
+      document.addEventListener('click', _onPastvuOutsideClick);
+    }, 0);
+  }
+
+  function hidePastvuLayer() {
+    STATE.pastvuMarkers.forEach(m => m.remove());
+    STATE.pastvuMarkers = [];
+    STATE.pastvuPhotos = [];
+    STATE.pastvuLayerVisible = false;
+    closePastvuPopup();
+
+    const btn = $('btn-pastvu-toggle');
+    if (!btn) return;
+    btn.classList.remove('active');
+    const icon = btn.querySelector('.material-symbols-outlined');
+    if (icon) icon.textContent = 'history';
+  }
+
+  async function togglePastvuLayer() {
+    if (STATE.pastvuLayerVisible) {
+      hidePastvuLayer();
+      return;
+    }
+
+    if (!STATE.currentObject) {
+      showToast('Сначала выберите объект на карте');
+      return;
+    }
+
+    const btn = $('btn-pastvu-toggle');
+    const icon = btn?.querySelector('.material-symbols-outlined');
+    if (icon) icon.textContent = 'hourglass_empty';
+
+    try {
+      const { lat, lng } = STATE.currentObject;
+      const params = JSON.stringify({ geo: [lat, lng], limit: 30, distance: 200 });
+      const url = `https://api.pastvu.com/api2?method=photo.giveNearestPhotos&params=${encodeURIComponent(params)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Network error');
+      const data = await res.json();
+      const photos = (data.result?.photos) || [];
+
+      if (!photos.length) {
+        showToast('Исторических фото рядом не найдено');
+        return;
+      }
+
+      STATE.pastvuPhotos = photos;
+
+      photos.forEach(photo => {
+        let markerLat, markerLng;
+        if (Array.isArray(photo.geo) && photo.geo.length >= 2) {
+          [markerLat, markerLng] = photo.geo;
+        } else {
+          markerLat = photo.lat ?? lat;
+          markerLng = photo.lng ?? lng;
+        }
+
+        const el = document.createElement('div');
+        el.className = 'pastvu-marker';
+        el.style.backgroundImage = `url('https://img.pastvu.com/h/${photo.file}')`;
+
+        if (photo.year) {
+          const badge = document.createElement('div');
+          badge.className = 'pastvu-marker-year';
+          badge.textContent = photo.year;
+          el.appendChild(badge);
+        }
+
+        el.addEventListener('click', e => {
+          e.stopPropagation();
+          _suppressMapClick = true;
+          openPastvuPopup(photo);
+        });
+
+        const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+          .setLngLat([markerLng, markerLat])
+          .addTo(STATE.map);
+
+        STATE.pastvuMarkers.push(marker);
+      });
+
+      STATE.pastvuLayerVisible = true;
+      if (btn) btn.classList.add('active');
+    } catch (err) {
+      showToast('Не удалось загрузить фото');
+    } finally {
+      if (icon) icon.textContent = 'history';
+    }
   }
 
   // ── NEURO ───────────────────────────────────
@@ -2255,6 +2418,9 @@ if (wikiCollapseBtn) {
 
     const buildings3dBtn = $('btn-3d-buildings');
     if (buildings3dBtn) buildings3dBtn.addEventListener('click', toggle3dBuildings);
+
+    const pastvuBtn = $('btn-pastvu-toggle');
+    if (pastvuBtn) pastvuBtn.addEventListener('click', togglePastvuLayer);
 
     const legendFloatBtn = $('btn-legend-float');
     if (legendFloatBtn) legendFloatBtn.addEventListener('click', toggleLegend);
